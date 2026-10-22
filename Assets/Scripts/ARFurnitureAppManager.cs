@@ -7,6 +7,24 @@ using UnityEngine.UI;
 using Vuforia;
 using Image = UnityEngine.UI.Image;
 
+[System.Serializable]
+public class FurnitureItem
+{
+    public string id;
+    public string displayName;
+    public string category;
+    public GameObject prefab;
+    public Sprite thumbnail;
+}
+
+[System.Serializable]
+public class FurnitureCategory
+{
+    public string id;
+    public string displayName;
+    public List<FurnitureItem> items = new List<FurnitureItem>();
+}
+
 public class ARFurnitureAppManager : MonoBehaviour
 {
     public static ARFurnitureAppManager Instance { get; private set; }
@@ -14,49 +32,43 @@ public class ARFurnitureAppManager : MonoBehaviour
     [Header("Dependencies")]
     public furniturePlacementManager placementManager;
 
-    [Header("Real 3 Furniture Prefabs")]
-    public GameObject whiteSofaPrefab;
-    public GameObject brownSofaPrefab;
-    public GameObject lightBrownSofaPrefab;
+    [Header("Catalog Suite Data")]
+    public List<FurnitureCategory> categories = new List<FurnitureCategory>();
+    public int selectedCategoryIndex = 0;
+    public string activeItemId = "WhiteSofa";
+    public FurnitureItem activeItem;
 
+    [Header("Color Palette Tokens")]
     public static readonly Color ColorBgPrimary = new Color(0.973f, 0.965f, 0.945f, 1f);
     public static readonly Color ColorBgSurface = new Color(1f, 1f, 1f, 0.98f);
     public static readonly Color ColorTextPrimary = new Color(0.141f, 0.141f, 0.141f, 1f);
-    public static readonly Color ColorTextSecondary = new Color(0.522f, 0.522f, 0.522f, 1f);
-    public static readonly Color ColorAccentTeal = new Color(0.224f, 0.714f, 0.714f, 1f);
+    public static readonly Color ColorTextSecondary = new Color(0.45f, 0.45f, 0.45f, 1f);
+    public static readonly Color ColorAccentTeal = new Color(0.18f, 0.68f, 0.68f, 1f);
     public static readonly Color ColorAccentActive = new Color(0.92f, 0.98f, 0.98f, 1f);
     public static readonly Color BorderSubtle = new Color(0.88f, 0.87f, 0.84f, 1f);
     public static readonly Color HandleColor = new Color(0.80f, 0.79f, 0.76f, 1f);
 
-    public struct SofaChoice
-    {
-        public string id;
-        public string name;
-        public string thumbnailPath;
-        public GameObject prefab;
-    }
+    [Header("AR Overlay References")]
+    public GameObject arOverlayPanel;
+    public Text mainStatusText;
+    public Image activeItemThumbImg;
+    public Text activeItemNameText;
 
-    private List<SofaChoice> sofaChoices = new List<SofaChoice>();
-    private int selectedSofaIndex = 0;
+    [Header("Catalog Modal References")]
+    public GameObject catalogModalPanel;
+    public Text categoryHeaderTitle;
+    public Transform categorySidebarContainer;
+    public Transform furnitureGridContainer;
 
-    private Canvas mainCanvas;
-    private GameObject splashPanel;
-    private CanvasGroup splashCanvasGroup;
-    private GameObject arOverlayPanel;
+    [Header("System Overlays")]
+    public GameObject snapshotFlash;
+    public CanvasGroup snapshotCanvasGroup;
+    public GameObject toastObj;
+    public Text toastText;
+    public GameObject splashPanel;
+    public CanvasGroup splashCanvasGroup;
 
-    private Text mainStatusText;
-
-    private Image[] sofaCardBorderImgs;
-    private Image[] sofaCardBgImgs;
-    private Text[] sofaCardTitleTexts;
-    private GameObject[] sofaCardActiveBadges;
-
-    private GameObject snapshotFlash;
-    private CanvasGroup snapshotCanvasGroup;
-    private GameObject toastObj;
-    private Text toastText;
     private Coroutine toastCoroutine;
-
     private Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>();
     private Font appFont;
 
@@ -73,7 +85,11 @@ public class ARFurnitureAppManager : MonoBehaviour
         }
 
         InitFont();
-        InitSofaChoices();
+
+        if (catalogModalPanel != null)
+        {
+            catalogModalPanel.SetActive(false);
+        }
     }
 
     private void Start()
@@ -83,12 +99,6 @@ public class ARFurnitureAppManager : MonoBehaviour
 
         if (placementManager != null)
         {
-            if (whiteSofaPrefab != null) placementManager.whiteSofaPrefab = whiteSofaPrefab;
-            if (brownSofaPrefab != null) placementManager.brownSofaPrefab = brownSofaPrefab;
-            if (lightBrownSofaPrefab != null) placementManager.lightBrownSofaPrefab = lightBrownSofaPrefab;
-
-            placementManager.currentSelectedPrefab = sofaChoices[selectedSofaIndex].prefab;
-
             placementManager.OnActiveFurnitureSpawned += OnActiveFurnitureSpawnedHandler;
             placementManager.OnActiveFurnitureMoved += OnActiveFurnitureMovedHandler;
             placementManager.OnFurnitureLocked += OnFurnitureLockedHandler;
@@ -97,10 +107,20 @@ public class ARFurnitureAppManager : MonoBehaviour
             placementManager.OnAllCleared += OnAllClearedHandler;
         }
 
-        if (!BindExistingSceneUI())
+        BindExistingSceneUI();
+
+        if (activeItem == null)
         {
-            BuildUI();
+            FindAndSetActiveItem(activeItemId);
         }
+
+        if (activeItem != null && placementManager != null)
+        {
+            placementManager.currentSelectedPrefab = activeItem.prefab;
+        }
+
+        UpdateActiveItemUI();
+        UpdateStatusText();
 
         if (splashPanel != null && splashPanel.activeInHierarchy)
         {
@@ -113,35 +133,6 @@ public class ARFurnitureAppManager : MonoBehaviour
         appFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (appFont == null) appFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
         if (appFont == null) appFont = Font.CreateDynamicFontFromOSFont("sans-serif", 14);
-    }
-
-    private void InitSofaChoices()
-    {
-        sofaChoices.Clear();
-
-        sofaChoices.Add(new SofaChoice
-        {
-            id = "white_sofa",
-            name = "White Sofa",
-            thumbnailPath = "Textures/Furniture/sofa_white_card",
-            prefab = whiteSofaPrefab
-        });
-
-        sofaChoices.Add(new SofaChoice
-        {
-            id = "brown_sofa",
-            name = "Brown Sofa",
-            thumbnailPath = "Textures/Furniture/sofa_brown_card",
-            prefab = brownSofaPrefab
-        });
-
-        sofaChoices.Add(new SofaChoice
-        {
-            id = "light_brown_sofa",
-            name = "Light Brown Sofa",
-            thumbnailPath = "Textures/Furniture/sofa_light_brown_card",
-            prefab = lightBrownSofaPrefab
-        });
     }
 
     public Sprite GetSprite(string path)
@@ -280,35 +271,81 @@ public class ARFurnitureAppManager : MonoBehaviour
                 }
             }
 
-            Transform sofaRow = bottomPanel.Find("SofaSelectionRow");
-            if (sofaRow != null)
+            Transform launcherRow = bottomPanel.Find("CatalogLauncherRow");
+            if (launcherRow != null)
             {
-                sofaCardBorderImgs = new Image[sofaChoices.Count];
-                sofaCardBgImgs = new Image[sofaChoices.Count];
-                sofaCardTitleTexts = new Text[sofaChoices.Count];
-                sofaCardActiveBadges = new GameObject[sofaChoices.Count];
-
-                for (int i = 0; i < sofaChoices.Count; i++)
+                Transform activeCard = launcherRow.Find("ActiveItemCard");
+                if (activeCard != null)
                 {
-                    int index = i;
-                    SofaChoice choice = sofaChoices[i];
-                    Transform card = sofaRow.Find("Card_" + choice.id);
-                    if (card != null)
-                    {
-                        Button b = card.GetComponent<Button>();
-                        if (b != null)
-                        {
-                            b.onClick.RemoveAllListeners();
-                            b.onClick.AddListener(() => OnSofaSelected(index));
-                        }
+                    activeItemThumbImg = activeCard.Find("Thumbnail")?.GetComponent<Image>();
+                    activeItemNameText = activeCard.Find("ItemName")?.GetComponent<Text>();
 
-                        sofaCardBgImgs[i] = card.GetComponent<Image>();
-                        sofaCardBorderImgs[i] = card.Find("Border")?.GetComponent<Image>();
-                        sofaCardTitleTexts[i] = card.Find("Label")?.GetComponent<Text>();
-                        sofaCardActiveBadges[i] = card.Find("ActiveBadge")?.gameObject;
+                    Button cardBtn = activeCard.GetComponent<Button>();
+                    if (cardBtn != null)
+                    {
+                        cardBtn.onClick.RemoveAllListeners();
+                        cardBtn.onClick.AddListener(OpenCatalogModal);
+                    }
+                }
+
+                Transform openBtn = launcherRow.Find("OpenCatalogBtn");
+                if (openBtn != null)
+                {
+                    Button b = openBtn.GetComponent<Button>();
+                    if (b != null)
+                    {
+                        b.onClick.RemoveAllListeners();
+                        b.onClick.AddListener(OpenCatalogModal);
                     }
                 }
             }
+        }
+
+        Transform modal = overlay.Find("CatalogModalPanel");
+        if (modal != null)
+        {
+            catalogModalPanel = modal.gameObject;
+
+            Transform scrim = modal.Find("ModalScrim");
+            if (scrim != null)
+            {
+                Button scrimBtn = scrim.GetComponent<Button>();
+                if (scrimBtn != null)
+                {
+                    scrimBtn.onClick.RemoveAllListeners();
+                    scrimBtn.onClick.AddListener(CloseCatalogModal);
+                }
+            }
+
+            Transform header = modal.Find("ModalWindow/ModalHeader");
+            if (header != null)
+            {
+                Button closeBtn = header.Find("CloseBtn")?.GetComponent<Button>();
+                if (closeBtn != null)
+                {
+                    closeBtn.onClick.RemoveAllListeners();
+                    closeBtn.onClick.AddListener(CloseCatalogModal);
+                }
+            }
+
+            Transform split = modal.Find("ModalWindow/SplitBody");
+            if (split != null)
+            {
+                categorySidebarContainer = split.Find("CategorySidebar/ScrollRect/Viewport/Content");
+                if (categorySidebarContainer == null)
+                    categorySidebarContainer = split.Find("CategorySidebar/Content");
+
+                categoryHeaderTitle = split.Find("FurnitureGridArea/GridHeader/CategoryTitle")?.GetComponent<Text>();
+
+                furnitureGridContainer = split.Find("FurnitureGridArea/ScrollRect/Viewport/Content");
+                if (furnitureGridContainer == null)
+                    furnitureGridContainer = split.Find("FurnitureGridArea/Content");
+
+                BindCategoryButtons();
+                BindFurnitureCardButtons();
+            }
+
+            catalogModalPanel.SetActive(false);
         }
 
         Transform toast = overlay.Find("ToastNotification");
@@ -334,419 +371,239 @@ public class ARFurnitureAppManager : MonoBehaviour
             splashCanvasGroup = splash.GetComponent<CanvasGroup>();
         }
 
-        OnSofaSelected(selectedSofaIndex);
-        UpdateStatusText();
-
         return true;
     }
 
-    private void BuildUI()
+    private void BindCategoryButtons()
     {
-        mainCanvas = FindObjectOfType<Canvas>();
-        if (mainCanvas == null)
+        if (categorySidebarContainer == null) return;
+
+        for (int i = 0; i < categories.Count; i++)
         {
-            GameObject canvasObj = new GameObject("ARAppCanvas");
-            mainCanvas = canvasObj.AddComponent<Canvas>();
-            mainCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasObj.AddComponent<GraphicRaycaster>();
-        }
-
-        CanvasScaler scaler = mainCanvas.GetComponent<CanvasScaler>();
-        if (scaler == null) scaler = mainCanvas.gameObject.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1080, 2400);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-
-        BuildAROverlay(mainCanvas.transform);
-        BuildSnapshotFlash(mainCanvas.transform);
-        BuildToast(mainCanvas.transform);
-    }
-
-    private void BuildAROverlay(Transform parent)
-    {
-        arOverlayPanel = CreateUIObject("AROverlayPanel", parent);
-        SetStretch(arOverlayPanel.GetComponent<RectTransform>());
-
-        GameObject bgObj = CreateUIObject("FallbackRoomBackground", arOverlayPanel.transform);
-        SetStretch(bgObj.GetComponent<RectTransform>());
-        Image fallbackRoomBg = bgObj.AddComponent<Image>();
-        fallbackRoomBg.sprite = GetSprite("Textures/Backgrounds/living_room_bg");
-        fallbackRoomBg.preserveAspect = false;
-
-        if (Application.platform == RuntimePlatform.Android)
-        {
-            fallbackRoomBg.gameObject.SetActive(false);
-        }
-
-        BuildTopFloatingHeader(arOverlayPanel.transform);
-        BuildUnifiedBottomPanel(arOverlayPanel.transform);
-    }
-
-    private void BuildTopFloatingHeader(Transform parent)
-    {
-        GameObject topBar = CreateUIObject("TopFloatingHeader", parent);
-        RectTransform r = topBar.GetComponent<RectTransform>();
-        r.anchorMin = new Vector2(0.5f, 1f);
-        r.anchorMax = new Vector2(0.5f, 1f);
-        r.pivot = new Vector2(0.5f, 1f);
-        r.anchoredPosition = new Vector2(0, -130);
-        r.sizeDelta = new Vector2(980, 76);
-
-        Image bg = topBar.AddComponent<Image>();
-        bg.color = ColorBgSurface;
-
-        GameObject resetBtn = CreateUIObject("ResetBtn", topBar.transform);
-        RectTransform rbRect = resetBtn.GetComponent<RectTransform>();
-        rbRect.anchorMin = new Vector2(0f, 0.5f);
-        rbRect.anchorMax = new Vector2(0f, 0.5f);
-        rbRect.pivot = new Vector2(0f, 0.5f);
-        rbRect.anchoredPosition = new Vector2(16, 0);
-        rbRect.sizeDelta = new Vector2(130, 52);
-
-        Image rbBg = resetBtn.AddComponent<Image>();
-        rbBg.color = ColorBgPrimary;
-        Button rBtn = AddButton(resetBtn);
-        rBtn.onClick.AddListener(() => {
-            if (placementManager != null) placementManager.ClearAllFurniture();
-        });
-        AddRobustText(resetBtn, "RESET", 17, FontStyle.Bold, ColorTextSecondary);
-
-        GameObject statusObj = CreateUIObject("StatusLabel", topBar.transform);
-        RectTransform stRect = statusObj.GetComponent<RectTransform>();
-        stRect.anchorMin = new Vector2(0f, 0f);
-        stRect.anchorMax = new Vector2(1f, 1f);
-        stRect.offsetMin = new Vector2(160, 0);
-        stRect.offsetMax = new Vector2(-160, 0);
-
-        mainStatusText = statusObj.AddComponent<Text>();
-        mainStatusText.font = appFont;
-        mainStatusText.fontSize = 20;
-        mainStatusText.fontStyle = FontStyle.Bold;
-        mainStatusText.color = ColorTextPrimary;
-        mainStatusText.alignment = TextAnchor.MiddleCenter;
-        mainStatusText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        mainStatusText.verticalOverflow = VerticalWrapMode.Overflow;
-        mainStatusText.text = "Tap floor to place White Sofa";
-
-        GameObject photoBtn = CreateUIObject("PhotoBtn", topBar.transform);
-        RectTransform pbRect = photoBtn.GetComponent<RectTransform>();
-        pbRect.anchorMin = new Vector2(1f, 0.5f);
-        pbRect.anchorMax = new Vector2(1f, 0.5f);
-        pbRect.pivot = new Vector2(1f, 0.5f);
-        pbRect.anchoredPosition = new Vector2(-16, 0);
-        pbRect.sizeDelta = new Vector2(130, 52);
-
-        Image pbBg = photoBtn.AddComponent<Image>();
-        pbBg.color = ColorBgPrimary;
-        Button pBtn = AddButton(photoBtn);
-        pBtn.onClick.AddListener(TriggerSnapshot);
-        AddRobustText(photoBtn, "PHOTO", 17, FontStyle.Bold, ColorTextPrimary);
-    }
-
-    private void BuildUnifiedBottomPanel(Transform parent)
-    {
-        GameObject bottomPanel = CreateUIObject("UnifiedBottomPanel", parent);
-        RectTransform r = bottomPanel.GetComponent<RectTransform>();
-        r.anchorMin = new Vector2(0.5f, 0f);
-        r.anchorMax = new Vector2(0.5f, 0f);
-        r.pivot = new Vector2(0.5f, 0f);
-        r.anchoredPosition = new Vector2(0, 40);
-        r.sizeDelta = new Vector2(1020, 360);
-
-        Image bg = bottomPanel.AddComponent<Image>();
-        bg.color = ColorBgSurface;
-
-        GameObject handle = CreateUIObject("HandlePill", bottomPanel.transform);
-        RectTransform hRect = handle.GetComponent<RectTransform>();
-        hRect.anchorMin = new Vector2(0.5f, 1f);
-        hRect.anchorMax = new Vector2(0.5f, 1f);
-        hRect.pivot = new Vector2(0.5f, 1f);
-        hRect.anchoredPosition = new Vector2(0, -10);
-        hRect.sizeDelta = new Vector2(64, 6);
-        Image hImg = handle.AddComponent<Image>();
-        hImg.color = HandleColor;
-
-        BuildControlRowInsideSheet(bottomPanel.transform);
-        BuildSofaSelectionRowInsideSheet(bottomPanel.transform);
-    }
-
-    private void BuildControlRowInsideSheet(Transform parent)
-    {
-        GameObject ctrlRow = CreateUIObject("ControlRow", parent);
-        RectTransform r = ctrlRow.GetComponent<RectTransform>();
-        r.anchorMin = new Vector2(0f, 1f);
-        r.anchorMax = new Vector2(1f, 1f);
-        r.pivot = new Vector2(0.5f, 1f);
-        r.anchoredPosition = new Vector2(0, -28);
-        r.sizeDelta = new Vector2(0, 78);
-
-        HorizontalLayoutGroup hlg = ctrlRow.AddComponent<HorizontalLayoutGroup>();
-        hlg.padding = new RectOffset(16, 16, 0, 0);
-        hlg.spacing = 14;
-        hlg.childAlignment = TextAnchor.MiddleCenter;
-        hlg.childControlWidth = true;
-        hlg.childControlHeight = true;
-        hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = false;
-
-        GameObject rotL = CreateUIObject("RotLBtn", ctrlRow.transform);
-        LayoutElement leL = rotL.AddComponent<LayoutElement>();
-        leL.preferredWidth = 170f;
-        leL.preferredHeight = 72f;
-        leL.minWidth = 150f;
-        leL.minHeight = 65f;
-        Image bgL = rotL.AddComponent<Image>();
-        bgL.color = ColorBgPrimary;
-        Button bL = AddButton(rotL);
-        bL.onClick.AddListener(() => {
-            if (placementManager != null) placementManager.RotateActiveFurniture(-15f);
-        });
-        AddRobustText(rotL, "ROTATE L\n(-15°)", 16, FontStyle.Bold, ColorTextPrimary);
-
-        GameObject lockBtn = CreateUIObject("LockBtn", ctrlRow.transform);
-        LayoutElement leLock = lockBtn.AddComponent<LayoutElement>();
-        leLock.preferredWidth = 470f;
-        leLock.preferredHeight = 72f;
-        leLock.minWidth = 380f;
-        leLock.minHeight = 65f;
-        Image bgLock = lockBtn.AddComponent<Image>();
-        bgLock.color = ColorAccentTeal;
-        Button bLock = AddButton(lockBtn);
-        bLock.onClick.AddListener(OnLockClicked);
-        AddRobustText(lockBtn, "LOCK POSITION", 24, FontStyle.Bold, Color.white);
-
-        GameObject rotR = CreateUIObject("RotRBtn", ctrlRow.transform);
-        LayoutElement leR = rotR.AddComponent<LayoutElement>();
-        leR.preferredWidth = 170f;
-        leR.preferredHeight = 72f;
-        leR.minWidth = 150f;
-        leR.minHeight = 65f;
-        Image bgR = rotR.AddComponent<Image>();
-        bgR.color = ColorBgPrimary;
-        Button bR = AddButton(rotR);
-        bR.onClick.AddListener(() => {
-            if (placementManager != null) placementManager.RotateActiveFurniture(15f);
-        });
-        AddRobustText(rotR, "ROTATE R\n(+15°)", 16, FontStyle.Bold, ColorTextPrimary);
-
-        GameObject delBtn = CreateUIObject("DelBtn", ctrlRow.transform);
-        LayoutElement leDel = delBtn.AddComponent<LayoutElement>();
-        leDel.preferredWidth = 84f;
-        leDel.preferredHeight = 72f;
-        leDel.minWidth = 70f;
-        leDel.minHeight = 65f;
-        Image bgDel = delBtn.AddComponent<Image>();
-        bgDel.color = ColorBgPrimary;
-        Button bDel = AddButton(delBtn);
-        bDel.onClick.AddListener(() => {
-            if (placementManager != null) placementManager.DeleteCurrentOrLast();
-        });
-        AddRobustText(delBtn, "DEL", 18, FontStyle.Bold, ColorTextPrimary);
-    }
-
-    private void BuildSofaSelectionRowInsideSheet(Transform parent)
-    {
-        GameObject sofaRow = CreateUIObject("SofaSelectionRow", parent);
-        RectTransform r = sofaRow.GetComponent<RectTransform>();
-        r.anchorMin = new Vector2(0f, 0f);
-        r.anchorMax = new Vector2(1f, 0f);
-        r.pivot = new Vector2(0.5f, 0f);
-        r.anchoredPosition = new Vector2(0, 16);
-        r.sizeDelta = new Vector2(0, 220);
-
-        HorizontalLayoutGroup hlg = sofaRow.AddComponent<HorizontalLayoutGroup>();
-        hlg.padding = new RectOffset(16, 16, 0, 0);
-        hlg.spacing = 16;
-        hlg.childAlignment = TextAnchor.MiddleCenter;
-        hlg.childControlWidth = true;
-        hlg.childControlHeight = true;
-        hlg.childForceExpandWidth = true;
-        hlg.childForceExpandHeight = true;
-
-        sofaCardBorderImgs = new Image[sofaChoices.Count];
-        sofaCardBgImgs = new Image[sofaChoices.Count];
-        sofaCardTitleTexts = new Text[sofaChoices.Count];
-        sofaCardActiveBadges = new GameObject[sofaChoices.Count];
-
-        for (int i = 0; i < sofaChoices.Count; i++)
-        {
-            int index = i;
-            SofaChoice choice = sofaChoices[i];
-            bool isSel = (i == selectedSofaIndex);
-
-            GameObject card = CreateUIObject("Card_" + choice.id, sofaRow.transform);
-            LayoutElement le = card.AddComponent<LayoutElement>();
-            le.preferredWidth = 310f;
-            le.preferredHeight = 210f;
-            le.minWidth = 260f;
-            le.minHeight = 180f;
-
-            Image cBg = card.AddComponent<Image>();
-            cBg.color = isSel ? ColorAccentActive : ColorBgPrimary;
-            sofaCardBgImgs[i] = cBg;
-
-            GameObject borderObj = CreateUIObject("Border", card.transform);
-            SetStretch(borderObj.GetComponent<RectTransform>());
-            Image borderImg = borderObj.AddComponent<Image>();
-            borderImg.color = isSel ? ColorAccentTeal : BorderSubtle;
-            borderImg.raycastTarget = false;
-            sofaCardBorderImgs[i] = borderImg;
-
-            Button btn = AddButton(card);
-            btn.onClick.AddListener(() => OnSofaSelected(index));
-
-            GameObject thumbObj = CreateUIObject("Thumbnail", card.transform);
-            RectTransform tRect = thumbObj.GetComponent<RectTransform>();
-            tRect.anchorMin = new Vector2(0.08f, 0.28f);
-            tRect.anchorMax = new Vector2(0.92f, 0.94f);
-            tRect.offsetMin = Vector2.zero;
-            tRect.offsetMax = Vector2.zero;
-            Image thumbImg = thumbObj.AddComponent<Image>();
-            thumbImg.sprite = GetSprite(choice.thumbnailPath);
-            thumbImg.preserveAspect = true;
-
-            GameObject labelObj = CreateUIObject("Label", card.transform);
-            RectTransform lRect = labelObj.GetComponent<RectTransform>();
-            lRect.anchorMin = new Vector2(0.04f, 0.04f);
-            lRect.anchorMax = new Vector2(0.96f, 0.28f);
-            lRect.offsetMin = Vector2.zero;
-            lRect.offsetMax = Vector2.zero;
-            Text labelText = labelObj.AddComponent<Text>();
-            labelText.font = appFont;
-            labelText.fontSize = 20;
-            labelText.fontStyle = isSel ? FontStyle.Bold : FontStyle.Normal;
-            labelText.color = isSel ? ColorAccentTeal : ColorTextPrimary;
-            labelText.alignment = TextAnchor.MiddleCenter;
-            labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            labelText.verticalOverflow = VerticalWrapMode.Overflow;
-            labelText.text = choice.name;
-            sofaCardTitleTexts[i] = labelText;
-
-            GameObject badgeObj = CreateUIObject("ActiveBadge", card.transform);
-            RectTransform bRect = badgeObj.GetComponent<RectTransform>();
-            bRect.anchorMin = new Vector2(1f, 1f);
-            bRect.anchorMax = new Vector2(1f, 1f);
-            bRect.pivot = new Vector2(1f, 1f);
-            bRect.sizeDelta = new Vector2(80, 28);
-            Image bImg = badgeObj.AddComponent<Image>();
-            bImg.color = ColorAccentTeal;
-
-            GameObject btObj = CreateUIObject("Text", badgeObj.transform);
-            SetStretch(btObj.GetComponent<RectTransform>());
-            Text bt = btObj.AddComponent<Text>();
-            bt.font = appFont;
-            bt.fontSize = 14;
-            bt.fontStyle = FontStyle.Bold;
-            bt.color = Color.white;
-            bt.alignment = TextAnchor.MiddleCenter;
-            bt.horizontalOverflow = HorizontalWrapMode.Overflow;
-            bt.verticalOverflow = VerticalWrapMode.Overflow;
-            bt.text = "ACTIVE";
-
-            sofaCardActiveBadges[i] = badgeObj;
-            badgeObj.SetActive(isSel);
-        }
-    }
-
-    private static Button AddButton(GameObject parent)
-    {
-        Button b = parent.AddComponent<Button>();
-        Navigation nav = b.navigation;
-        nav.mode = Navigation.Mode.None;
-        b.navigation = nav;
-        return b;
-    }
-
-    private void BuildSnapshotFlash(Transform parent)
-    {
-        snapshotFlash = CreateUIObject("SnapshotFlashOverlay", parent);
-        SetStretch(snapshotFlash.GetComponent<RectTransform>());
-
-        Image img = snapshotFlash.AddComponent<Image>();
-        img.color = Color.white;
-
-        snapshotCanvasGroup = snapshotFlash.AddComponent<CanvasGroup>();
-        snapshotCanvasGroup.alpha = 0f;
-        snapshotFlash.SetActive(false);
-    }
-
-    private void BuildToast(Transform parent)
-    {
-        toastObj = CreateUIObject("ToastNotification", parent);
-        RectTransform r = toastObj.GetComponent<RectTransform>();
-        r.anchorMin = new Vector2(0.5f, 0.44f);
-        r.anchorMax = new Vector2(0.5f, 0.44f);
-        r.pivot = new Vector2(0.5f, 0.5f);
-        r.sizeDelta = new Vector2(680, 76);
-
-        Image bg = toastObj.AddComponent<Image>();
-        bg.color = new Color(0.14f, 0.14f, 0.14f, 0.94f);
-
-        GameObject textObj = CreateUIObject("Text", toastObj.transform);
-        SetStretch(textObj.GetComponent<RectTransform>());
-        toastText = textObj.AddComponent<Text>();
-        toastText.font = appFont;
-        toastText.fontSize = 22;
-        toastText.color = Color.white;
-        toastText.alignment = TextAnchor.MiddleCenter;
-        toastText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        toastText.verticalOverflow = VerticalWrapMode.Overflow;
-        toastText.text = "";
-
-        toastObj.SetActive(false);
-    }
-
-    private IEnumerator SplashScreenSequence()
-    {
-        yield return new WaitForSeconds(1.8f);
-
-        float elapsed = 0f;
-        float duration = 0.5f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            if (splashCanvasGroup != null)
-                splashCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
-            yield return null;
-        }
-
-        if (splashPanel != null) splashPanel.SetActive(false);
-    }
-
-    public void OnSofaSelected(int index)
-    {
-        selectedSofaIndex = index;
-        SofaChoice choice = sofaChoices[index];
-
-        for (int i = 0; i < sofaChoices.Count; i++)
-        {
-            bool isCurrent = (i == index);
-            if (sofaCardBorderImgs != null && i < sofaCardBorderImgs.Length && sofaCardBorderImgs[i] != null)
+            int catIdx = i;
+            string catId = categories[i].id;
+            Transform btnTransform = categorySidebarContainer.Find("CatBtn_" + catId);
+            if (btnTransform != null)
             {
-                sofaCardBorderImgs[i].color = isCurrent ? ColorAccentTeal : BorderSubtle;
-            }
-            if (sofaCardBgImgs != null && i < sofaCardBgImgs.Length && sofaCardBgImgs[i] != null)
-            {
-                sofaCardBgImgs[i].color = isCurrent ? ColorAccentActive : ColorBgPrimary;
-            }
-            if (sofaCardTitleTexts != null && i < sofaCardTitleTexts.Length && sofaCardTitleTexts[i] != null)
-            {
-                sofaCardTitleTexts[i].color = isCurrent ? ColorAccentTeal : ColorTextPrimary;
-                sofaCardTitleTexts[i].fontStyle = isCurrent ? FontStyle.Bold : FontStyle.Normal;
-            }
-            if (sofaCardActiveBadges != null && i < sofaCardActiveBadges.Length && sofaCardActiveBadges[i] != null)
-            {
-                sofaCardActiveBadges[i].SetActive(isCurrent);
+                Button btn = btnTransform.GetComponent<Button>();
+                if (btn != null)
+                {
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(() => SelectCategory(catIdx));
+                }
             }
         }
+    }
+
+    private void BindFurnitureCardButtons()
+    {
+        if (furnitureGridContainer == null) return;
+
+        for (int c = 0; c < categories.Count; c++)
+        {
+            FurnitureCategory cat = categories[c];
+            Transform catView = furnitureGridContainer.Find("CategoryView_" + cat.id);
+            if (catView == null) continue;
+
+            for (int i = 0; i < cat.items.Count; i++)
+            {
+                FurnitureItem item = cat.items[i];
+                Transform card = catView.Find("Card_" + item.id);
+                if (card != null)
+                {
+                    Button btn = card.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.onClick.RemoveAllListeners();
+                        btn.onClick.AddListener(() => SelectFurnitureItem(item));
+                    }
+                }
+            }
+        }
+    }
+
+    public void OpenCatalogModal()
+    {
+        if (catalogModalPanel != null)
+        {
+            catalogModalPanel.SetActive(true);
+            SelectCategory(selectedCategoryIndex);
+        }
+    }
+
+    public void CloseCatalogModal()
+    {
+        if (catalogModalPanel != null)
+        {
+            catalogModalPanel.SetActive(false);
+        }
+    }
+
+    public void SelectCategory(int categoryIndex)
+    {
+        if (categoryIndex < 0 || categoryIndex >= categories.Count) return;
+
+        selectedCategoryIndex = categoryIndex;
+        FurnitureCategory cat = categories[selectedCategoryIndex];
+
+        if (categoryHeaderTitle != null)
+        {
+            categoryHeaderTitle.text = cat.displayName.ToUpper() + " (" + cat.items.Count + " ITEMS)";
+        }
+
+        if (categorySidebarContainer != null)
+        {
+            for (int i = 0; i < categories.Count; i++)
+            {
+                Transform btnTransform = categorySidebarContainer.Find("CatBtn_" + categories[i].id);
+                if (btnTransform != null)
+                {
+                    Image bg = btnTransform.GetComponent<Image>();
+                    Text label = btnTransform.Find("Label")?.GetComponent<Text>();
+                    Image indicator = btnTransform.Find("ActiveIndicator")?.GetComponent<Image>();
+
+                    bool isSelected = (i == selectedCategoryIndex);
+
+                    if (bg != null)
+                    {
+                        bg.color = isSelected ? ColorAccentTeal : ColorBgSurface;
+                    }
+
+                    if (label != null)
+                    {
+                        label.color = isSelected ? Color.white : ColorTextPrimary;
+                        label.fontStyle = isSelected ? FontStyle.Bold : FontStyle.Normal;
+                    }
+
+                    if (indicator != null)
+                    {
+                        indicator.gameObject.SetActive(isSelected);
+                    }
+                }
+            }
+        }
+
+        if (furnitureGridContainer != null)
+        {
+            for (int i = 0; i < categories.Count; i++)
+            {
+                Transform catView = furnitureGridContainer.Find("CategoryView_" + categories[i].id);
+                if (catView != null)
+                {
+                    catView.gameObject.SetActive(i == selectedCategoryIndex);
+                }
+            }
+        }
+
+        RefreshCardActiveStates();
+    }
+
+    public void SelectFurnitureItem(FurnitureItem item)
+    {
+        if (item == null) return;
+
+        activeItem = item;
+        activeItemId = item.id;
+
+        UpdateActiveItemUI();
 
         if (placementManager != null)
         {
-            placementManager.SwitchSelectedFurniture(choice.prefab);
+            placementManager.SwitchSelectedFurniture(item.prefab);
         }
 
         UpdateStatusText();
+        CloseCatalogModal();
+
+        ShowToast("Selected " + item.displayName + " - Tap floor to place");
+    }
+
+    public void SelectFurnitureItemById(string itemId)
+    {
+        FindAndSetActiveItem(itemId);
+        if (activeItem != null)
+        {
+            SelectFurnitureItem(activeItem);
+        }
+    }
+
+    private void FindAndSetActiveItem(string itemId)
+    {
+        foreach (var cat in categories)
+        {
+            foreach (var item in cat.items)
+            {
+                if (item.id == itemId)
+                {
+                    activeItem = item;
+                    activeItemId = item.id;
+                    return;
+                }
+            }
+        }
+
+        if (categories.Count > 0 && categories[0].items.Count > 0)
+        {
+            activeItem = categories[0].items[0];
+            activeItemId = activeItem.id;
+        }
+    }
+
+    private void UpdateActiveItemUI()
+    {
+        if (activeItem == null) return;
+
+        if (activeItemThumbImg != null && activeItem.thumbnail != null)
+        {
+            activeItemThumbImg.sprite = activeItem.thumbnail;
+        }
+
+        if (activeItemNameText != null)
+        {
+            activeItemNameText.text = activeItem.displayName;
+        }
+
+        RefreshCardActiveStates();
+    }
+
+    private void RefreshCardActiveStates()
+    {
+        if (furnitureGridContainer == null || activeItem == null) return;
+
+        for (int c = 0; c < categories.Count; c++)
+        {
+            FurnitureCategory cat = categories[c];
+            Transform catView = furnitureGridContainer.Find("CategoryView_" + cat.id);
+            if (catView == null) continue;
+
+            for (int i = 0; i < cat.items.Count; i++)
+            {
+                FurnitureItem item = cat.items[i];
+                Transform card = catView.Find("Card_" + item.id);
+                if (card != null)
+                {
+                    bool isActive = (item.id == activeItemId);
+
+                    Image cardBg = card.GetComponent<Image>();
+                    if (cardBg != null)
+                    {
+                        cardBg.color = isActive ? ColorAccentActive : ColorBgSurface;
+                    }
+
+                    Image border = card.Find("Border")?.GetComponent<Image>();
+                    if (border != null)
+                    {
+                        border.color = isActive ? ColorAccentTeal : BorderSubtle;
+                    }
+
+                    GameObject badge = card.Find("ActiveBadge")?.gameObject;
+                    if (badge != null)
+                    {
+                        badge.SetActive(isActive);
+                    }
+                }
+            }
+        }
     }
 
     public void OnLockClicked()
@@ -760,7 +617,7 @@ public class ARFurnitureAppManager : MonoBehaviour
         }
         else
         {
-            ShowToast("Tap the floor first to place the sofa before locking!");
+            ShowToast("Tap the floor first to place the furniture before locking!");
         }
     }
 
@@ -777,16 +634,6 @@ public class ARFurnitureAppManager : MonoBehaviour
 
         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         string filename = "FurnishAR_" + timestamp + ".png";
-        string savePath;
-
-        if (Application.platform == RuntimePlatform.Android)
-        {
-            savePath = Path.Combine(Application.persistentDataPath, filename);
-        }
-        else
-        {
-            savePath = Path.Combine(Application.dataPath, "../" + filename);
-        }
 
         ScreenCapture.CaptureScreenshot(filename);
 
@@ -835,7 +682,7 @@ public class ARFurnitureAppManager : MonoBehaviour
 
         bool hasActive = placementManager != null && placementManager.activeFurnitureInstance != null;
         int lockedCount = placementManager != null ? placementManager.lockedFurnitureList.Count : 0;
-        string currentName = sofaChoices[selectedSofaIndex].name;
+        string currentName = activeItem != null ? activeItem.displayName : "Furniture";
 
         if (hasActive)
         {
@@ -844,7 +691,7 @@ public class ARFurnitureAppManager : MonoBehaviour
         }
         else if (lockedCount > 0)
         {
-            mainStatusText.text = lockedCount + " SOFA(S) LOCKED - Tap floor to place another";
+            mainStatusText.text = lockedCount + " PIECE(S) LOCKED - Tap floor to place another";
             mainStatusText.color = ColorAccentTeal;
         }
         else
@@ -857,7 +704,7 @@ public class ARFurnitureAppManager : MonoBehaviour
     private void OnActiveFurnitureSpawnedHandler(GameObject obj)
     {
         UpdateStatusText();
-        ShowToast("Position sofa on floor, then tap Lock");
+        ShowToast("Position piece on floor, then tap Lock");
     }
 
     private void OnActiveFurnitureMovedHandler(GameObject obj)
@@ -882,43 +729,29 @@ public class ARFurnitureAppManager : MonoBehaviour
     {
         UpdateStatusText();
         int totalLocked = placementManager != null ? placementManager.lockedFurnitureList.Count : 0;
-        ShowToast("Removed last sofa (" + totalLocked + " remaining)");
+        ShowToast("Removed last piece (" + totalLocked + " remaining)");
     }
 
     private void OnAllClearedHandler()
     {
         UpdateStatusText();
-        ShowToast("All sofas cleared. Tap floor to place.");
+        ShowToast("All furniture cleared. Tap floor to place.");
     }
 
-    private static GameObject CreateUIObject(string name, Transform parent)
+    private IEnumerator SplashScreenSequence()
     {
-        GameObject go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-        return go;
-    }
+        yield return new WaitForSeconds(1.8f);
 
-    private static void SetStretch(RectTransform rt)
-    {
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-        rt.pivot = new Vector2(0.5f, 0.5f);
-    }
+        float elapsed = 0f;
+        float duration = 0.5f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            if (splashCanvasGroup != null)
+                splashCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            yield return null;
+        }
 
-    private void AddRobustText(GameObject parent, string text, int fontSize, FontStyle style, Color color)
-    {
-        GameObject tObj = CreateUIObject("Label", parent.transform);
-        SetStretch(tObj.GetComponent<RectTransform>());
-        Text t = tObj.AddComponent<Text>();
-        t.font = appFont;
-        t.fontSize = fontSize;
-        t.fontStyle = style;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.color = color;
-        t.horizontalOverflow = HorizontalWrapMode.Overflow;
-        t.verticalOverflow = VerticalWrapMode.Overflow;
-        t.text = text;
+        if (splashPanel != null) splashPanel.SetActive(false);
     }
 }
