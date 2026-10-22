@@ -10,15 +10,16 @@ using Image = UnityEngine.UI.Image;
 
 public class SceneUIBuilder
 {
-    private static readonly Color ColorBgPrimary = new Color(0.973f, 0.965f, 0.945f, 1f);
-    private static readonly Color ColorBgSurface = new Color(1f, 1f, 1f, 0.98f);
-    private static readonly Color ColorTextPrimary = new Color(0.141f, 0.141f, 0.141f, 1f);
-    private static readonly Color ColorTextSecondary = new Color(0.45f, 0.45f, 0.45f, 1f);
-    private static readonly Color ColorAccentTeal = new Color(0.18f, 0.68f, 0.68f, 1f);
-    private static readonly Color ColorAccentActive = new Color(0.92f, 0.98f, 0.98f, 1f);
-    private static readonly Color ColorBorderSubtle = new Color(0.88f, 0.87f, 0.84f, 1f);
-    private static readonly Color ColorHandle = new Color(0.80f, 0.79f, 0.76f, 1f);
-    private static readonly Color ColorScrim = new Color(0.08f, 0.08f, 0.10f, 0.72f);
+    private static readonly Color ColorBgPrimary = new Color(0.96f, 0.95f, 0.93f, 1f);
+    private static readonly Color ColorBgSurface = new Color(1f, 1f, 1f, 0.96f);
+    private static readonly Color ColorTextPrimary = new Color(0.10f, 0.10f, 0.12f, 1f);
+    private static readonly Color ColorTextSecondary = new Color(0.42f, 0.42f, 0.45f, 1f);
+    private static readonly Color ColorAccentTeal = new Color(0.16f, 0.62f, 0.56f, 1f);
+    private static readonly Color ColorAccentActive = new Color(0.88f, 0.96f, 0.95f, 1f);
+    private static readonly Color ColorBorderSubtle = new Color(0.86f, 0.85f, 0.82f, 1f);
+    private static readonly Color ColorHandle = new Color(0.78f, 0.77f, 0.74f, 1f);
+    private static readonly Color ColorScrim = new Color(0.08f, 0.08f, 0.10f, 0.76f);
+    private static readonly Color ColorDanger = new Color(0.85f, 0.28f, 0.25f, 1f);
 
     public struct ItemDef
     {
@@ -189,6 +190,7 @@ public class SceneUIBuilder
         scaler.referenceResolution = new Vector2(1080, 2400);
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
+        scaler.dynamicPixelsPerUnit = 2.5f;
 
         GraphicRaycaster gr = canvasObj.GetComponent<GraphicRaycaster>();
         if (gr == null) canvasObj.AddComponent<GraphicRaycaster>();
@@ -235,7 +237,7 @@ public class SceneUIBuilder
         GameObject splashPanel = CreateUIObject("SplashScreenPanel", canvasObj.transform);
         SetStretch(splashPanel.GetComponent<RectTransform>());
         Image splashBg = splashPanel.AddComponent<Image>();
-        splashBg.color = ColorBgPrimary;
+        splashBg.color = new Color(0.08f, 0.08f, 0.10f, 0.85f);
         CanvasGroup splashCg = splashPanel.AddComponent<CanvasGroup>();
         appManager.splashPanel = splashPanel;
         appManager.splashCanvasGroup = splashCg;
@@ -245,8 +247,8 @@ public class SceneUIBuilder
         scRect.anchorMin = new Vector2(0.5f, 0.5f);
         scRect.anchorMax = new Vector2(0.5f, 0.5f);
         scRect.pivot = new Vector2(0.5f, 0.5f);
-        scRect.anchoredPosition = new Vector2(0, 40);
-        scRect.sizeDelta = new Vector2(860, 980);
+        scRect.anchoredPosition = new Vector2(0, 30);
+        scRect.sizeDelta = new Vector2(880, 1060);
         Image scBg = splashCard.AddComponent<Image>();
         scBg.color = ColorBgSurface;
 
@@ -258,10 +260,10 @@ public class SceneUIBuilder
 
         GameObject logoEmblem = CreateUIObject("LogoEmblem", splashCard.transform);
         RectTransform leRect = logoEmblem.GetComponent<RectTransform>();
-        leRect.anchorMin = new Vector2(0.5f, 0.78f);
-        leRect.anchorMax = new Vector2(0.5f, 0.78f);
+        leRect.anchorMin = new Vector2(0.5f, 0.82f);
+        leRect.anchorMax = new Vector2(0.5f, 0.82f);
         leRect.pivot = new Vector2(0.5f, 0.5f);
-        leRect.sizeDelta = new Vector2(110, 110);
+        leRect.sizeDelta = new Vector2(120, 120);
         Image leImg = logoEmblem.AddComponent<Image>();
         leImg.color = ColorAccentTeal;
 
@@ -269,7 +271,7 @@ public class SceneUIBuilder
         SetStretch(logoIconText.GetComponent<RectTransform>());
         Text lit = logoIconText.AddComponent<Text>();
         lit.font = appFont;
-        lit.fontSize = 44;
+        lit.fontSize = 46;
         lit.fontStyle = FontStyle.Bold;
         lit.color = Color.white;
         lit.alignment = TextAnchor.MiddleCenter;
@@ -277,13 +279,13 @@ public class SceneUIBuilder
 
         GameObject titleObj = CreateUIObject("AppTitle", splashCard.transform);
         RectTransform titRect = titleObj.GetComponent<RectTransform>();
-        titRect.anchorMin = new Vector2(0.05f, 0.56f);
-        titRect.anchorMax = new Vector2(0.95f, 0.68f);
+        titRect.anchorMin = new Vector2(0.05f, 0.65f);
+        titRect.anchorMax = new Vector2(0.95f, 0.75f);
         titRect.offsetMin = Vector2.zero;
         titRect.offsetMax = Vector2.zero;
         Text titText = titleObj.AddComponent<Text>();
         titText.font = appFont;
-        titText.fontSize = 42;
+        titText.fontSize = 44;
         titText.fontStyle = FontStyle.Bold;
         titText.color = ColorTextPrimary;
         titText.alignment = TextAnchor.MiddleCenter;
@@ -291,13 +293,13 @@ public class SceneUIBuilder
 
         GameObject subObj = CreateUIObject("AppSubtitle", splashCard.transform);
         RectTransform subRect = subObj.GetComponent<RectTransform>();
-        subRect.anchorMin = new Vector2(0.05f, 0.48f);
-        subRect.anchorMax = new Vector2(0.95f, 0.56f);
+        subRect.anchorMin = new Vector2(0.05f, 0.57f);
+        subRect.anchorMax = new Vector2(0.95f, 0.64f);
         subRect.offsetMin = Vector2.zero;
         subRect.offsetMax = Vector2.zero;
         Text subText = subObj.AddComponent<Text>();
         subText.font = appFont;
-        subText.fontSize = 18;
+        subText.fontSize = 22;
         subText.color = ColorTextSecondary;
         subText.alignment = TextAnchor.MiddleCenter;
         subText.text = "Augmented Reality Interior Design";
@@ -305,23 +307,24 @@ public class SceneUIBuilder
         GameObject featuresObj = CreateUIObject("FeaturesTag", splashCard.transform);
         RectTransform featRect = featuresObj.GetComponent<RectTransform>();
         featRect.anchorMin = new Vector2(0.08f, 0.28f);
-        featRect.anchorMax = new Vector2(0.92f, 0.44f);
+        featRect.anchorMax = new Vector2(0.92f, 0.52f);
         featRect.offsetMin = Vector2.zero;
         featRect.offsetMax = Vector2.zero;
         Text featText = featuresObj.AddComponent<Text>();
         featText.font = appFont;
-        featText.fontSize = 16;
+        featText.fontSize = 22;
         featText.fontStyle = FontStyle.Bold;
+        featText.lineSpacing = 1.35f;
         featText.color = ColorAccentTeal;
         featText.alignment = TextAnchor.MiddleCenter;
-        featText.text = "[ 9 CATEGORIES - 75 FURNITURE PIECES ]\n[ INSTANT FLOOR DETECTION ]\n[ TRUE-TO-SCALE 3D PREVIEW ]";
+        featText.text = "• TRUE-TO-SCALE 3D PREVIEW\n• INSTANT FLOOR PLANE TRACKING\n• 75 CURATED DESIGNER PIECES";
 
         GameObject startBtn = CreateUIObject("StartBtn", splashCard.transform);
         RectTransform sbtnRect = startBtn.GetComponent<RectTransform>();
         sbtnRect.anchorMin = new Vector2(0.5f, 0.12f);
         sbtnRect.anchorMax = new Vector2(0.5f, 0.12f);
         sbtnRect.pivot = new Vector2(0.5f, 0.5f);
-        sbtnRect.sizeDelta = new Vector2(520, 76);
+        sbtnRect.sizeDelta = new Vector2(680, 88);
         Image sbtnBg = startBtn.AddComponent<Image>();
         sbtnBg.color = ColorAccentTeal;
         AddButton(startBtn);
@@ -330,25 +333,34 @@ public class SceneUIBuilder
         SetStretch(sbtnLabel.GetComponent<RectTransform>());
         Text sbtnText = sbtnLabel.AddComponent<Text>();
         sbtnText.font = appFont;
-        sbtnText.fontSize = 22;
+        sbtnText.fontSize = 26;
         sbtnText.fontStyle = FontStyle.Bold;
         sbtnText.color = Color.white;
         sbtnText.alignment = TextAnchor.MiddleCenter;
-        sbtnText.text = "START AR EXPERIENCE ->";
+        sbtnText.text = "START AR EXPERIENCE →";
+
+        splashPanel.SetActive(false);
 
         GameObject overlay = CreateUIObject("AROverlayPanel", canvasObj.transform);
         SetStretch(overlay.GetComponent<RectTransform>());
         appManager.arOverlayPanel = overlay;
+        overlay.SetActive(true);
 
         GameObject topBar = CreateUIObject("TopFloatingHeader", overlay.transform);
         RectTransform tbRect = topBar.GetComponent<RectTransform>();
         tbRect.anchorMin = new Vector2(0.5f, 1f);
         tbRect.anchorMax = new Vector2(0.5f, 1f);
         tbRect.pivot = new Vector2(0.5f, 1f);
-        tbRect.anchoredPosition = new Vector2(0, -130);
-        tbRect.sizeDelta = new Vector2(980, 76);
+        tbRect.anchoredPosition = new Vector2(0, -120);
+        tbRect.sizeDelta = new Vector2(980, 84);
         Image tbBg = topBar.AddComponent<Image>();
         tbBg.color = ColorBgSurface;
+
+        GameObject tbBorder = CreateUIObject("Border", topBar.transform);
+        SetStretch(tbBorder.GetComponent<RectTransform>());
+        Image tbbImg = tbBorder.AddComponent<Image>();
+        tbbImg.color = ColorBorderSubtle;
+        tbbImg.raycastTarget = false;
 
         GameObject resetBtn = CreateUIObject("ResetBtn", topBar.transform);
         RectTransform rbRect = resetBtn.GetComponent<RectTransform>();
@@ -356,21 +368,21 @@ public class SceneUIBuilder
         rbRect.anchorMax = new Vector2(0f, 0.5f);
         rbRect.pivot = new Vector2(0f, 0.5f);
         rbRect.anchoredPosition = new Vector2(16, 0);
-        rbRect.sizeDelta = new Vector2(140, 52);
+        rbRect.sizeDelta = new Vector2(140, 56);
         Image rbBg = resetBtn.AddComponent<Image>();
         rbBg.color = ColorBgPrimary;
         AddButton(resetBtn);
-        AddText(resetBtn, "RESET", 17, FontStyle.Bold, ColorTextSecondary, appFont);
+        AddText(resetBtn, "RESET", 20, FontStyle.Bold, ColorTextSecondary, appFont);
 
         GameObject statusObj = CreateUIObject("StatusLabel", topBar.transform);
         RectTransform stRect = statusObj.GetComponent<RectTransform>();
         stRect.anchorMin = new Vector2(0f, 0f);
         stRect.anchorMax = new Vector2(1f, 1f);
-        stRect.offsetMin = new Vector2(170, 0);
+        stRect.offsetMin = new Vector2(174, 0);
         stRect.offsetMax = new Vector2(-20, 0);
         Text stText = statusObj.AddComponent<Text>();
         stText.font = appFont;
-        stText.fontSize = 20;
+        stText.fontSize = 24;
         stText.fontStyle = FontStyle.Bold;
         stText.color = ColorTextPrimary;
         stText.alignment = TextAnchor.MiddleLeft;
@@ -384,10 +396,16 @@ public class SceneUIBuilder
         bpRect.anchorMin = new Vector2(0.5f, 0f);
         bpRect.anchorMax = new Vector2(0.5f, 0f);
         bpRect.pivot = new Vector2(0.5f, 0.5f);
-        bpRect.anchoredPosition = new Vector2(0, 200);
-        bpRect.sizeDelta = new Vector2(1020, 360);
+        bpRect.anchoredPosition = new Vector2(0, 190);
+        bpRect.sizeDelta = new Vector2(1000, 316);
         Image bpBg = bottomPanel.AddComponent<Image>();
         bpBg.color = ColorBgSurface;
+
+        GameObject bpBorder = CreateUIObject("Border", bottomPanel.transform);
+        SetStretch(bpBorder.GetComponent<RectTransform>());
+        Image bpbImg = bpBorder.AddComponent<Image>();
+        bpbImg.color = ColorBorderSubtle;
+        bpbImg.raycastTarget = false;
 
         GameObject handle = CreateUIObject("HandlePill", bottomPanel.transform);
         RectTransform hRect = handle.GetComponent<RectTransform>();
@@ -404,8 +422,8 @@ public class SceneUIBuilder
         crRect.anchorMin = new Vector2(0f, 1f);
         crRect.anchorMax = new Vector2(1f, 1f);
         crRect.pivot = new Vector2(0.5f, 1f);
-        crRect.anchoredPosition = new Vector2(0, -26);
-        crRect.sizeDelta = new Vector2(0, 78);
+        crRect.anchoredPosition = new Vector2(0, -22);
+        crRect.sizeDelta = new Vector2(0, 84);
 
         HorizontalLayoutGroup crLayout = ctrlRow.AddComponent<HorizontalLayoutGroup>();
         crLayout.padding = new RectOffset(16, 16, 0, 0);
@@ -418,47 +436,47 @@ public class SceneUIBuilder
 
         GameObject rotL = CreateUIObject("RotLBtn", ctrlRow.transform);
         LayoutElement leL = rotL.AddComponent<LayoutElement>();
-        leL.preferredWidth = 170f;
-        leL.preferredHeight = 72f;
-        leL.minWidth = 150f;
+        leL.preferredWidth = 160f;
+        leL.preferredHeight = 74f;
+        leL.minWidth = 140f;
         leL.minHeight = 65f;
         Image bgL = rotL.AddComponent<Image>();
         bgL.color = ColorBgPrimary;
         AddButton(rotL);
-        AddText(rotL, "ROTATE L\n(-15 deg)", 16, FontStyle.Bold, ColorTextPrimary, appFont);
+        AddText(rotL, "ROTATE L\n-15°", 18, FontStyle.Bold, ColorTextPrimary, appFont);
 
         GameObject lockBtn = CreateUIObject("LockBtn", ctrlRow.transform);
         LayoutElement leLock = lockBtn.AddComponent<LayoutElement>();
-        leLock.preferredWidth = 470f;
-        leLock.preferredHeight = 72f;
-        leLock.minWidth = 380f;
+        leLock.preferredWidth = 510f;
+        leLock.preferredHeight = 74f;
+        leLock.minWidth = 400f;
         leLock.minHeight = 65f;
         Image bgLock = lockBtn.AddComponent<Image>();
         bgLock.color = ColorAccentTeal;
         AddButton(lockBtn);
-        AddText(lockBtn, "LOCK POSITION", 24, FontStyle.Bold, Color.white, appFont);
+        AddText(lockBtn, "LOCK POSITION", 26, FontStyle.Bold, Color.white, appFont);
 
         GameObject rotR = CreateUIObject("RotRBtn", ctrlRow.transform);
         LayoutElement leR = rotR.AddComponent<LayoutElement>();
-        leR.preferredWidth = 170f;
-        leR.preferredHeight = 72f;
-        leR.minWidth = 150f;
+        leR.preferredWidth = 160f;
+        leR.preferredHeight = 74f;
+        leR.minWidth = 140f;
         leR.minHeight = 65f;
         Image bgR = rotR.AddComponent<Image>();
         bgR.color = ColorBgPrimary;
         AddButton(rotR);
-        AddText(rotR, "ROTATE R\n(+15 deg)", 16, FontStyle.Bold, ColorTextPrimary, appFont);
+        AddText(rotR, "ROTATE R\n+15°", 18, FontStyle.Bold, ColorTextPrimary, appFont);
 
         GameObject delBtn = CreateUIObject("DelBtn", ctrlRow.transform);
         LayoutElement leDel = delBtn.AddComponent<LayoutElement>();
-        leDel.preferredWidth = 84f;
-        leDel.preferredHeight = 72f;
-        leDel.minWidth = 70f;
+        leDel.preferredWidth = 100f;
+        leDel.preferredHeight = 74f;
+        leDel.minWidth = 80f;
         leDel.minHeight = 65f;
         Image bgDel = delBtn.AddComponent<Image>();
         bgDel.color = ColorBgPrimary;
         AddButton(delBtn);
-        AddText(delBtn, "DEL", 18, FontStyle.Bold, ColorTextPrimary, appFont);
+        AddText(delBtn, "DEL", 20, FontStyle.Bold, ColorDanger, appFont);
 
         GameObject launcherRow = CreateUIObject("CatalogLauncherRow", bottomPanel.transform);
         RectTransform lrRect = launcherRow.GetComponent<RectTransform>();
@@ -466,7 +484,7 @@ public class SceneUIBuilder
         lrRect.anchorMax = new Vector2(1f, 0f);
         lrRect.pivot = new Vector2(0.5f, 0f);
         lrRect.anchoredPosition = new Vector2(0, 16);
-        lrRect.sizeDelta = new Vector2(0, 224);
+        lrRect.sizeDelta = new Vector2(0, 172);
 
         GameObject activeCard = CreateUIObject("ActiveItemCard", launcherRow.transform);
         RectTransform acRect = activeCard.GetComponent<RectTransform>();
@@ -474,7 +492,7 @@ public class SceneUIBuilder
         acRect.anchorMax = new Vector2(0f, 0.5f);
         acRect.pivot = new Vector2(0f, 0.5f);
         acRect.anchoredPosition = new Vector2(16, 0);
-        acRect.sizeDelta = new Vector2(320, 212);
+        acRect.sizeDelta = new Vector2(286, 156);
         Image acBg = activeCard.AddComponent<Image>();
         acBg.color = ColorBgPrimary;
         AddButton(activeCard);
@@ -485,26 +503,26 @@ public class SceneUIBuilder
         acbImg.color = ColorBorderSubtle;
         acbImg.raycastTarget = false;
 
-        GameObject acTag = CreateUIObject("SubtitleTag", activeCard.transform);
+        GameObject acTag = CreateUIObject("Tag", activeCard.transform);
         RectTransform actRect = acTag.GetComponent<RectTransform>();
-        actRect.anchorMin = new Vector2(0.06f, 0.78f);
-        actRect.anchorMax = new Vector2(0.94f, 0.94f);
-        actRect.offsetMin = Vector2.zero;
-        actRect.offsetMax = Vector2.zero;
+        actRect.anchorMin = new Vector2(0.5f, 0.88f);
+        actRect.anchorMax = new Vector2(0.5f, 0.88f);
+        actRect.pivot = new Vector2(0.5f, 0.5f);
+        actRect.sizeDelta = new Vector2(260, 24);
         Text actText = acTag.AddComponent<Text>();
         actText.font = appFont;
         actText.fontSize = 13;
         actText.fontStyle = FontStyle.Bold;
         actText.color = ColorTextSecondary;
         actText.alignment = TextAnchor.MiddleCenter;
-        actText.text = "CURRENT SELECTION";
+        actText.text = "CURRENT PIECE";
 
         GameObject acThumb = CreateUIObject("Thumbnail", activeCard.transform);
         RectTransform acthRect = acThumb.GetComponent<RectTransform>();
-        acthRect.anchorMin = new Vector2(0.08f, 0.28f);
-        acthRect.anchorMax = new Vector2(0.92f, 0.78f);
-        acthRect.offsetMin = Vector2.zero;
-        acthRect.offsetMax = Vector2.zero;
+        acthRect.anchorMin = new Vector2(0.5f, 0.52f);
+        acthRect.anchorMax = new Vector2(0.5f, 0.52f);
+        acthRect.pivot = new Vector2(0.5f, 0.5f);
+        acthRect.sizeDelta = new Vector2(88, 88);
         Image acthImg = acThumb.AddComponent<Image>();
         acthImg.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Textures/Catalog/Sofas/WhiteSofa.png");
         acthImg.preserveAspect = true;
@@ -512,13 +530,13 @@ public class SceneUIBuilder
 
         GameObject acName = CreateUIObject("ItemName", activeCard.transform);
         RectTransform acnRect = acName.GetComponent<RectTransform>();
-        acnRect.anchorMin = new Vector2(0.04f, 0.04f);
-        acnRect.anchorMax = new Vector2(0.96f, 0.26f);
-        acnRect.offsetMin = Vector2.zero;
-        acnRect.offsetMax = Vector2.zero;
+        acnRect.anchorMin = new Vector2(0.5f, 0.16f);
+        acnRect.anchorMax = new Vector2(0.5f, 0.16f);
+        acnRect.pivot = new Vector2(0.5f, 0.5f);
+        acnRect.sizeDelta = new Vector2(270, 28);
         Text acnText = acName.AddComponent<Text>();
         acnText.font = appFont;
-        acnText.fontSize = 18;
+        acnText.fontSize = 20;
         acnText.fontStyle = FontStyle.Bold;
         acnText.color = ColorTextPrimary;
         acnText.alignment = TextAnchor.MiddleCenter;
@@ -531,20 +549,20 @@ public class SceneUIBuilder
         ocRect.anchorMax = new Vector2(1f, 0.5f);
         ocRect.pivot = new Vector2(1f, 0.5f);
         ocRect.anchoredPosition = new Vector2(-16, 0);
-        ocRect.sizeDelta = new Vector2(644, 212);
+        ocRect.sizeDelta = new Vector2(666, 156);
         Image ocBg = openCatalogBtn.AddComponent<Image>();
         ocBg.color = ColorAccentTeal;
         AddButton(openCatalogBtn);
 
         GameObject ocTitle = CreateUIObject("BtnTitle", openCatalogBtn.transform);
         RectTransform octRect = ocTitle.GetComponent<RectTransform>();
-        octRect.anchorMin = new Vector2(0.04f, 0.56f);
-        octRect.anchorMax = new Vector2(0.96f, 0.90f);
-        octRect.offsetMin = Vector2.zero;
-        octRect.offsetMax = Vector2.zero;
+        octRect.anchorMin = new Vector2(0.5f, 0.76f);
+        octRect.anchorMax = new Vector2(0.5f, 0.76f);
+        octRect.pivot = new Vector2(0.5f, 0.5f);
+        octRect.sizeDelta = new Vector2(640, 36);
         Text octText = ocTitle.AddComponent<Text>();
         octText.font = appFont;
-        octText.fontSize = 28;
+        octText.fontSize = 30;
         octText.fontStyle = FontStyle.Bold;
         octText.color = Color.white;
         octText.alignment = TextAnchor.MiddleCenter;
@@ -552,34 +570,34 @@ public class SceneUIBuilder
 
         GameObject ocSub = CreateUIObject("BtnSubtitle", openCatalogBtn.transform);
         RectTransform ocsRect = ocSub.GetComponent<RectTransform>();
-        ocsRect.anchorMin = new Vector2(0.04f, 0.32f);
-        ocsRect.anchorMax = new Vector2(0.96f, 0.54f);
-        ocsRect.offsetMin = Vector2.zero;
-        ocsRect.offsetMax = Vector2.zero;
+        ocsRect.anchorMin = new Vector2(0.5f, 0.50f);
+        ocsRect.anchorMax = new Vector2(0.5f, 0.50f);
+        ocsRect.pivot = new Vector2(0.5f, 0.5f);
+        ocsRect.sizeDelta = new Vector2(640, 26);
         Text ocsText = ocSub.AddComponent<Text>();
         ocsText.font = appFont;
-        ocsText.fontSize = 17;
+        ocsText.fontSize = 18;
         ocsText.color = new Color(1f, 1f, 1f, 0.92f);
         ocsText.alignment = TextAnchor.MiddleCenter;
-        ocsText.text = "9 Categories - 75 Curated Pieces";
+        ocsText.text = "9 Categories · 75 Curated Pieces";
 
         GameObject ocPill = CreateUIObject("BtnPill", openCatalogBtn.transform);
         RectTransform ocpRect = ocPill.GetComponent<RectTransform>();
-        ocpRect.anchorMin = new Vector2(0.12f, 0.08f);
-        ocpRect.anchorMax = new Vector2(0.88f, 0.28f);
-        ocpRect.offsetMin = Vector2.zero;
-        ocpRect.offsetMax = Vector2.zero;
+        ocpRect.anchorMin = new Vector2(0.5f, 0.20f);
+        ocpRect.anchorMax = new Vector2(0.5f, 0.20f);
+        ocpRect.pivot = new Vector2(0.5f, 0.5f);
+        ocpRect.sizeDelta = new Vector2(520, 44);
         Image ocpBg = ocPill.AddComponent<Image>();
-        ocpBg.color = ColorBgSurface;
+        ocpBg.color = Color.white;
         GameObject ocpLabel = CreateUIObject("Label", ocPill.transform);
         SetStretch(ocpLabel.GetComponent<RectTransform>());
         Text ocpText = ocpLabel.AddComponent<Text>();
         ocpText.font = appFont;
-        ocpText.fontSize = 15;
+        ocpText.fontSize = 18;
         ocpText.fontStyle = FontStyle.Bold;
         ocpText.color = ColorTextPrimary;
         ocpText.alignment = TextAnchor.MiddleCenter;
-        ocpText.text = "EXPLORE ALL FURNITURE ->";
+        ocpText.text = "EXPLORE ALL FURNITURE →";
 
         GameObject modalPanel = CreateUIObject("CatalogModalPanel", canvasObj.transform);
         SetStretch(modalPanel.GetComponent<RectTransform>());
@@ -626,7 +644,7 @@ public class SceneUIBuilder
         mhtRect.offsetMax = Vector2.zero;
         Text mht = mhTitle.AddComponent<Text>();
         mht.font = appFont;
-        mht.fontSize = 28;
+        mht.fontSize = 32;
         mht.fontStyle = FontStyle.Bold;
         mht.color = ColorTextPrimary;
         mht.alignment = TextAnchor.MiddleLeft;
@@ -640,7 +658,7 @@ public class SceneUIBuilder
         mhsRect.offsetMax = Vector2.zero;
         Text mhs = mhSub.AddComponent<Text>();
         mhs.font = appFont;
-        mhs.fontSize = 16;
+        mhs.fontSize = 18;
         mhs.color = ColorTextSecondary;
         mhs.alignment = TextAnchor.MiddleLeft;
         mhs.text = "Select category on left - Tap any piece to place in your room";
@@ -651,11 +669,11 @@ public class SceneUIBuilder
         cbRect.anchorMax = new Vector2(1f, 0.5f);
         cbRect.pivot = new Vector2(1f, 0.5f);
         cbRect.anchoredPosition = new Vector2(-20, 0);
-        cbRect.sizeDelta = new Vector2(130, 60);
+        cbRect.sizeDelta = new Vector2(140, 60);
         Image cbBg = closeBtn.AddComponent<Image>();
         cbBg.color = ColorBgSurface;
         AddButton(closeBtn);
-        AddText(closeBtn, "X CLOSE", 20, FontStyle.Bold, ColorTextPrimary, appFont);
+        AddText(closeBtn, "X CLOSE", 22, FontStyle.Bold, ColorTextPrimary, appFont);
 
         GameObject splitBody = CreateUIObject("SplitBody", modalWindow.transform);
         RectTransform sbRect = splitBody.GetComponent<RectTransform>();
@@ -683,7 +701,7 @@ public class SceneUIBuilder
         shRect.sizeDelta = new Vector2(0, 48);
         Text shText = sideHeader.AddComponent<Text>();
         shText.font = appFont;
-        shText.fontSize = 16;
+        shText.fontSize = 18;
         shText.fontStyle = FontStyle.Bold;
         shText.color = ColorTextSecondary;
         shText.alignment = TextAnchor.MiddleCenter;
@@ -755,7 +773,7 @@ public class SceneUIBuilder
             SetStretch(cbLabel.GetComponent<RectTransform>());
             Text cbt = cbLabel.AddComponent<Text>();
             cbt.font = appFont;
-            cbt.fontSize = 19;
+            cbt.fontSize = 20;
             cbt.fontStyle = isFirst ? FontStyle.Bold : FontStyle.Normal;
             cbt.color = isFirst ? Color.white : ColorTextPrimary;
             cbt.alignment = TextAnchor.MiddleCenter;
@@ -805,7 +823,7 @@ public class SceneUIBuilder
         ghtRect.offsetMax = Vector2.zero;
         Text ghtText = ghTitle.AddComponent<Text>();
         ghtText.font = appFont;
-        ghtText.fontSize = 22;
+        ghtText.fontSize = 24;
         ghtText.fontStyle = FontStyle.Bold;
         ghtText.color = ColorTextPrimary;
         ghtText.alignment = TextAnchor.MiddleLeft;
@@ -820,7 +838,7 @@ public class SceneUIBuilder
         ghhRect.offsetMax = new Vector2(-20, 0);
         Text ghhText = ghHint.AddComponent<Text>();
         ghhText.font = appFont;
-        ghhText.fontSize = 15;
+        ghhText.fontSize = 18;
         ghhText.color = ColorTextSecondary;
         ghhText.alignment = TextAnchor.MiddleRight;
         ghhText.text = "Tap piece to place";
@@ -913,7 +931,7 @@ public class SceneUIBuilder
                 lRect.offsetMax = Vector2.zero;
                 Text labelText = labelObj.AddComponent<Text>();
                 labelText.font = appFont;
-                labelText.fontSize = 20;
+                labelText.fontSize = 22;
                 labelText.fontStyle = isSelectedItem ? FontStyle.Bold : FontStyle.Normal;
                 labelText.color = ColorTextPrimary;
                 labelText.alignment = TextAnchor.MiddleCenter;
@@ -927,7 +945,7 @@ public class SceneUIBuilder
                 hntRect.offsetMax = Vector2.zero;
                 Text hintText = hintObj.AddComponent<Text>();
                 hintText.font = appFont;
-                hintText.fontSize = 14;
+                hintText.fontSize = 16;
                 hintText.fontStyle = FontStyle.Bold;
                 hintText.color = ColorAccentTeal;
                 hintText.alignment = TextAnchor.MiddleCenter;
@@ -946,7 +964,7 @@ public class SceneUIBuilder
                 SetStretch(btObj.GetComponent<RectTransform>());
                 Text bt = btObj.AddComponent<Text>();
                 bt.font = appFont;
-                bt.fontSize = 14;
+                bt.fontSize = 15;
                 bt.fontStyle = FontStyle.Bold;
                 bt.color = Color.white;
                 bt.alignment = TextAnchor.MiddleCenter;

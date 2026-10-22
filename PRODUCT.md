@@ -50,20 +50,20 @@ flowchart TD
 - **Real 3D Showcase Furniture:** A high-detail [`White Sofa.prefab`](file:///home/anni/Furnish_Ar/Assets/Assets/Furnitures/White%20Sofa/White%20Sofa.prefab) is pre-spawned at `(0, 0, 2.2f)` with soft directional lighting (`intensity 1.15`, warm white tint) and the [`FurnitureLockBadge`](file:///home/anni/Furnish_Ar/Assets/Scripts/FurnitureLockBadge.cs) attached.
 - [`furniturePlacementManager.cs`](file:///home/anni/Furnish_Ar/Assets/Scripts/furniturePlacementManager.cs) automatically detects and binds `InitialShowcaseFurniture` upon startup, allowing instant manipulation, rotation, locking, and hot-swapping directly in the Editor Game view without requiring device deployment.
 
-### 2.3 Distinct Three-Screen Architecture
+### 2.3 Distinct Three-Screen Architecture & Direct AR Immersion
 The user interface is structured into three clean, dedicated canvas panels:
 
 1. **`SplashScreenPanel`:**
-   - Visual onboarding screen displaying the Furnish AR monogram emblem (`"F"`), headline, subtitle (*"Augmented Reality Interior Design"*), and feature highlight pills (*"True-To-Scale 3D Preview"*, *"Instant Floor Plane Tracking"*, *"75 Curated Designer Pieces"*).
-   - Includes a prominent `"START AR EXPERIENCE ->"` action button for immediate dismissal or auto-fades over 2.4 seconds.
+   - Visual onboarding screen displaying the Furnish AR monogram emblem (`"AR"`), headline, subtitle (*"Augmented Reality Interior Design"*), and feature highlight bullets (*"True-To-Scale 3D Preview"*, *"Instant Floor Plane Tracking"*, *"75 Curated Designer Pieces"*).
+   - Inactive by default in `SampleScene.unity` so developers and users launch directly into the immersive 3D room. When enabled, it completely hides `AROverlayPanel` to prevent layer collision, and tapping `"START AR EXPERIENCE →"` fades it out cleanly.
 2. **`AROverlayPanel`:**
    - The primary transparent HUD layer active during AR tracking.
-   - **Top Header (`TopFloatingHeader`):** Features the `RESET` button on the left to clear placed models and the centered `StatusLabel` delivering real-time contextual guidance (e.g. *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*). The legacy photo snapshot button has been removed for a clean, distraction-free viewfinder.
+   - **Top Header (`TopFloatingHeader`):** Elevated translucent pill featuring the `RESET` button on the left (20 px Bold) and the centered `StatusLabel` (24 px Bold) delivering real-time contextual guidance (e.g. *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*).
    - **Unified Bottom Dock (`UnifiedBottomPanel`):**
-     - **Control Row:** `ROTATE L (-15 deg)`, teal `LOCK POSITION` / `UNLOCK POSITION`, `ROTATE R (+15 deg)`, and `DEL`.
-     - **Catalog Launcher Row:** `ActiveItemCard` (displaying active piece thumbnail and name) and `OpenCatalogBtn` (bold teal button with `"FURNITURE CATALOG"`, `"9 Categories - 75 Curated Pieces"`, and `"EXPLORE ALL FURNITURE ->"`).
+     - **Control Row:** `ROTATE L (-15°)` (18 px Bold), eucalyptus teal `LOCK POSITION` (26 px Bold), `ROTATE R (+15°)` (18 px Bold), and `DEL` (20 px Bold coral red).
+     - **Catalog Launcher Row:** `ActiveItemCard` (displaying active piece thumbnail and name with 20 px Bold typography) and `OpenCatalogBtn` (eucalyptus teal button with `"FURNITURE CATALOG"` 30 px Bold, `"9 Categories · 75 Curated Pieces"` 18 px, and white action pill `"EXPLORE ALL FURNITURE →"` 18 px Bold).
 3. **`CatalogModalPanel`:**
-   - Full-screen modal drawer divided into a 1/3 category navigation sidebar and 2/3 scrollable furniture grid.
+   - Full-screen modal drawer divided into a 1/3 category navigation sidebar and 2/3 scrollable furniture grid with high-legibility typography (32 px header, 20 px category labels, 22 px item titles).
 
 ### 2.4 1/3 Sidebar and 2/3 Grid Catalog Suite
 - When the user taps `"FURNITURE CATALOG"` or `"EXPLORE ALL FURNITURE ->"`, the modal drawer opens over a dark translucent backdrop (`rgba(20,20,25,0.72)`).

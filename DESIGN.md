@@ -21,15 +21,16 @@ Key principles governing the interface:
 
 | Token Name | Hex Code | Unity `Color(r, g, b, a)` | Purpose |
 | :--- | :--- | :--- | :--- |
-| **`ColorBgPrimary`** | `#F8F6F1` | `(0.973, 0.965, 0.945, 1.0)` | Off-white warm ivory base for buttons & inactive cards |
-| **`ColorBgSurface`** | `#FFFFFF` | `(1.0, 1.0, 1.0, 0.98)` | High-opacity surface white for floating bars, cards, and modal window |
-| **`ColorAccentTeal`** | `#2EB0B0` | `(0.180, 0.680, 0.680, 1.0)` | Primary brand action color (`LOCK`, `ACTIVE` tags, catalog launcher) |
-| **`ColorAccentActive`** | `#EBF8F8` | `(0.920, 0.980, 0.980, 1.0)` | Subtle teal tint applied to selected furniture card backgrounds |
-| **`ColorTextPrimary`** | `#242424` | `(0.141, 0.141, 0.141, 1.0)` | High-contrast dark charcoal ink for headlines and labels (Contrast > 14:1) |
-| **`ColorTextSecondary`**| `#737373` | `(0.450, 0.450, 0.450, 1.0)` | Muted neutral gray for secondary actions and hints (Contrast > 5.5:1) |
-| **`ColorBorderSubtle`** | `#E0DDD6` | `(0.880, 0.870, 0.840, 1.0)` | Crisp 1px outline for cards, dividers, and separators |
-| **`ColorHandle`** | `#CCC8C0` | `(0.800, 0.790, 0.760, 1.0)` | Sheet drag handle pill indicator |
-| **`ColorScrim`** | `#141419` | `(0.080, 0.080, 0.100, 0.72)` | Translucent dark backdrop scrim behind modal drawer |
+| **`ColorBgPrimary`** | `#F5F2EC` | `(0.960, 0.950, 0.930, 1.0)` | Warm Scandinavian ivory base for cards and inactive buttons |
+| **`ColorBgSurface`** | `#FFFFFF` | `(1.0, 1.0, 1.0, 0.96)` | Elevated translucent white for floating pill bars and modal window |
+| **`ColorAccentTeal`** | `#2A9D8F` | `(0.160, 0.620, 0.560, 1.0)` | Eucalyptus teal primary action color (`LOCK`, `ACTIVE` tags, catalog launcher) |
+| **`ColorAccentActive`** | `#E0F4F2` | `(0.880, 0.960, 0.950, 1.0)` | Soft mint wash applied to selected furniture card backgrounds |
+| **`ColorTextPrimary`** | `#1A1A1E` | `(0.100, 0.100, 0.120, 1.0)` | High-contrast dark charcoal ink for headlines and labels (Contrast > 15:1) |
+| **`ColorTextSecondary`**| `#6B6B73` | `(0.420, 0.420, 0.450, 1.0)` | Neutral slate for secondary actions and hints (Contrast > 5.5:1) |
+| **`ColorBorderSubtle`** | `#DCD9D1` | `(0.860, 0.850, 0.820, 1.0)` | Crisp 1px outline for cards, dividers, and separators |
+| **`ColorHandle`** | `#C7C4BC` | `(0.780, 0.770, 0.740, 1.0)` | Sheet drag handle pill indicator |
+| **`ColorDanger`** | `#D94740` | `(0.850, 0.280, 0.250, 1.0)` | Coral red for destructive actions (`DEL`) |
+| **`ColorScrim`** | `#141419` | `(0.080, 0.080, 0.100, 0.76)` | Translucent dark backdrop scrim behind modal drawer and splash |
 | **`ColorStatusLocked`** | `#0FA870` | `(0.060, 0.680, 0.440, 0.94)` | Emerald green indicating locked/anchored position |
 | **`ColorStatusUnlocked`**| `#E98C1E`| `(0.920, 0.550, 0.120, 0.94)` | Warm amber indicating editable/unlocked state |
 
@@ -37,27 +38,34 @@ Key principles governing the interface:
 
 ## 3. Typography Hierarchy
 
-The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / `sans-serif`) with explicit font weight and sizing hierarchy:
+The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / `sans-serif`) with vector-crisp dynamic rasterization (`dynamicPixelsPerUnit = 2.5f`):
 
 | Element | Size | Weight / Style | Color | Alignment |
 | :--- | :--- | :--- | :--- | :--- |
-| **Splash Monogram Emblem** | 64 px | Bold | `#FFFFFF` | Center |
-| **Splash Screen Title** | 36 px | Bold | `#242424` | Center |
-| **Splash Screen Subtitle** | 18 px | Normal | `#737373` | Center |
-| **Splash Feature Text** | 16 px | Bold | `#242424` | Center |
-| **Splash Start Button CTA** | 20 px | Bold | `#FFFFFF` | Center |
-| **Modal Header Title** | 28 px | Bold | `#242424` | Left |
-| **Catalog Launcher Title** | 28 px | Bold | `#FFFFFF` | Center |
-| **Top Status Header** | 20 px | Bold | `#242424` | Center |
-| **Primary Action** (`LOCK POSITION`) | 24 px | Bold | `#FFFFFF` | Center |
-| **Grid Category Title** | 22 px | Bold | `#242424` | Left |
-| **Furniture Card Label** | 20 px | Bold | `#242424` | Center |
-| **Category Button Label** | 19 px | Bold (Active) / Normal | `#FFFFFF` / `#242424` | Center |
-| **Active Item Card Name** | 18 px | Bold | `#242424` | Center |
-| **Secondary Controls** (`ROTATE`, `DEL`) | 16-18 px | Bold | `#242424` | Center |
-| **Top Header Action** (`RESET`) | 17 px | Bold | `#242424` | Center |
-| **Launcher Subtitle** | 17 px | Normal | `#FFFFFF` (92% alpha) | Center |
-| **Modal Header Subtitle** | 16 px | Normal | `#737373` | Left |
+| **Splash Monogram Emblem** | 46 px | Bold | `#FFFFFF` | Center |
+| **Splash Screen Title** | 44 px | Bold | `#1A1A1E` | Center |
+| **Splash Screen Subtitle** | 22 px | Normal | `#6B6B73` | Center |
+| **Splash Feature Text** | 22 px | Bold (1.35 LineSpacing) | `#2A9D8F` | Center |
+| **Splash Start Button CTA** | 26 px | Bold | `#FFFFFF` | Center |
+| **Modal Header Title** | 32 px | Bold | `#1A1A1A` | Left |
+| **Catalog Launcher Title** | 30 px | Bold | `#FFFFFF` | Center |
+| **Top Status Header** | 24 px | Bold | `#1A1A1E` | Left |
+| **Primary Action** (`LOCK POSITION`) | 26 px | Bold | `#FFFFFF` | Center |
+| **Grid Category Title** | 24 px | Bold | `#1A1A1E` | Left |
+| **Furniture Card Label** | 22 px | Bold | `#1A1A1E` | Center |
+| **Category Button Label** | 20 px | Bold (Active) / Normal | `#FFFFFF` / `#1A1A1E` | Center |
+| **Active Item Card Name** | 20 px | Bold | `#1A1A1E` | Center |
+| **Secondary Controls** (`ROTATE`, `DEL`) | 18-20 px | Bold | `#1A1A1E` / `#D94740` | Center |
+| **Top Header Action** (`RESET`) | 20 px | Bold | `#6B6B73` | Center |
+| **Launcher Subtitle** | 18 px | Normal | `#FFFFFF` (92% alpha) | Center |
+| **Modal Header Subtitle** | 18 px | Normal | `#6B6B73` | Left |
+| **Category Sidebar Header** | 18 px | Bold | `#6B6B73` | Center |
+| **Grid Header Hint** | 18 px | Normal | `#6B6B73` | Right |
+| **Card Action Hint** (`SELECT & PLACE`) | 16 px | Bold | `#2A9D8F` | Center |
+| **Card Active Badge** | 15 px | Bold | `#FFFFFF` | Center |
+| **Active Selection Tag** | 13 px | Bold | `#6B6B73` | Center |
+| **3D World Lock Badge** | 36 px | Bold | `#FFFFFF` | Center |
+| **Toast Notifications** | 22 px | Normal | `#FFFFFF` | Center |
 | **Category Sidebar Header** | 16 px | Bold | `#737373` | Center |
 | **Grid Header Hint** | 15 px | Normal | `#737373` | Right |
 | **Card Action Hint** (`SELECT & PLACE`) | 14 px | Bold | `#2EB0B0` | Center |
@@ -76,34 +84,35 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
   - Reference Resolution: **1080 × 2400** (Modern smartphone portrait)
   - Screen Match Mode: `Match Width Or Height`
   - Match: **`0.5`** (Equal weighting for width and height scaling)
+  - Dynamic Pixels Per Unit: **`2.5`** (Vector-crisp font rendering across high-DPI displays)
 
 ---
 
 ### 4.2 Splash Screen Panel (`SplashScreenPanel`)
 
-The splash screen acts as an elegant welcome card overlay that greets the user on launch:
+The splash screen acts as an optional welcome card overlay that greets the user on first launch:
 ```
 +-------------------------------------------------------------+
 |                                                             |
 |          +---------------------------------------+          |
-|          |                 ( F )                 |          | <- LogoEmblem (110 x 110, Teal Circle)
-|          |               Furnish AR              |          | <- AppTitle (36 px Bold)
-|          |    Augmented Reality Interior Design  |          | <- AppSubtitle (18 px)
-|          | ------------------------------------- |          | <- Divider (740 x 2)
-|          | [ True-To-Scale 3D Preview          ] |          | <- FeaturePill 1 (740 x 64)
-|          | [ Instant Floor Plane Tracking      ] |          | <- FeaturePill 2 (740 x 64)
-|          | [ 75 Curated Designer Pieces        ] |          | <- FeaturePill 3 (740 x 64)
+|          |                 ( AR )                |          | <- LogoEmblem (120 x 120, Teal Circle)
+|          |               Furnish AR              |          | <- AppTitle (44 px Bold)
+|          |    Augmented Reality Interior Design  |          | <- AppSubtitle (22 px)
+|          | ------------------------------------- |          | <- Divider
+|          | • True-To-Scale 3D Preview            |          | <- FeatureHighlight 1 (22 px Bold)
+|          | • Instant Floor Plane Tracking        |          | <- FeatureHighlight 2 (22 px Bold)
+|          | • 75 Curated Designer Pieces          |          | <- FeatureHighlight 3 (22 px Bold)
 |          |                                       |          |
-|          |     [ START AR EXPERIENCE -> ]        |          | <- StartBtn (740 x 84, Teal)
-|          +---------------------------------------+          | <- SplashCard (860 x 980)
+|          |     [ START AR EXPERIENCE → ]         |          | <- StartBtn (680 x 88, Teal)
+|          +---------------------------------------+          | <- SplashCard (880 x 1060)
 |                                                             |
 +-------------------------------------------------------------+
 ```
-- **Panel Transform:** Stretches across full canvas (`1080 × 2400 px`).
-- **SplashCard:** Size `860 × 980 px`, centered at `(0, 40)`, surface white background (`ColorBgSurface`) with subtle border.
-- **LogoEmblem:** `110 × 110 px` teal circular emblem with white monogram letter `"F"`.
-- **Feature Pills:** 3 rounded rows (`740 × 64 px`, `ColorBgPrimary`) highlighting key value props.
-- **StartBtn:** High-contrast `740 × 84 px` teal action button with `"START AR EXPERIENCE ->"`. Tapping immediately triggers a smooth 0.4s fade-out, or auto-dismisses after 2.4 seconds.
+- **Default State:** Inactive (`SetActive(false)`) by default in `SampleScene.unity` so developers and users immediately experience the 3D room, floor tracking, and furniture without an occluding card.
+- **Panel Transform:** Stretches across full canvas (`1080 × 2400 px`), background dark scrim `Color(0.08, 0.08, 0.10, 0.85)`.
+- **SplashCard:** Size `880 × 1060 px`, centered at `(0, 30)`, surface white background (`ColorBgSurface`) with subtle border.
+- **LogoEmblem:** `120 × 120 px` teal circular emblem with white monogram `"AR"` (46 px bold).
+- **StartBtn:** High-contrast `680 × 88 px` teal action button with `"START AR EXPERIENCE →"`. Tapping immediately fades out the splash and reveals the AR HUD cleanly.
 
 ---
 
@@ -114,7 +123,7 @@ The splash screen acts as an elegant welcome card overlay that greets the user o
 |                      [AR Camera View]                       |
 |                                                             |
 |  +-------------------------------------------------------+  |
-|  | [RESET]      Tap floor to place White Sofa            |  | <- TopFloatingHeader (980 x 76)
+|  | [RESET]      Tap floor to place White Sofa            |  | <- TopFloatingHeader (980 x 84)
 |  +-------------------------------------------------------+  |
 |                                                             |
 |                      [ 3D FURNITURE ]                       |
@@ -124,42 +133,43 @@ The splash screen acts as an elegant welcome card overlay that greets the user o
 |  +-------------------------------------------------------+  |
 |  |                        ( === )                        |  | <- HandlePill (64 x 6)
 |  | +----------+ +-----------------------+ +----------+-+ |  |
-|  | | ROTATE L | |     LOCK POSITION     | | ROTATE R |X| |  | <- ControlRow (Height 78)
+|  | | ROTATE L | |     LOCK POSITION     | | ROTATE R |D| |  | <- ControlRow (Height 84)
+|  | |   -15°   | |      (26px Bold)      | |   +15°   |E| |  |
 |  | +----------+ +-----------------------+ +----------+-+ |  |
 |  |                                                       |  |
 |  | +-----------------+   +-----------------------------+ |  |
 |  | | CURRENT PIECE   |   |      FURNITURE CATALOG      | |  |
-|  | | [Thumb]         |   | 9 Categories - 75 Pieces    | |  | <- CatalogLauncherRow (Height 224)
-|  | | White Sofa      |   | [ EXPLORE ALL FURNITURE -> ]| |  |
+|  | | [Thumb 88x88]   |   | 9 Categories · 75 Pieces    | |  | <- CatalogLauncherRow (Height 172)
+|  | | White Sofa      |   | [ EXPLORE ALL FURNITURE → ] | |  |
 |  | +-----------------+   +-----------------------------+ |  |
-|  +-------------------------------------------------------+  | <- UnifiedBottomPanel (1020 x 360)
+|  +-------------------------------------------------------+  | <- UnifiedBottomPanel (1000 x 316)
 +-------------------------------------------------------------+
 ```
 
-#### Top Floating Header (980 × 76 px)
+#### Top Floating Header (980 × 84 px)
 - **Object Name:** `TopFloatingHeader`
 - **Anchoring:** Top-Center (`anchorMin: (0.5, 1.0)`, `anchorMax: (0.5, 1.0)`, `pivot: (0.5, 1.0)`)
-- **Position & Size:** `anchoredPosition: (0, -130)`, `sizeDelta: (980, 76)`
-- **Background:** `ColorBgSurface` with rounded card styling.
+- **Position & Size:** `anchoredPosition: (0, -120)`, `sizeDelta: (980, 84)`
+- **Background:** Elevated translucent surface white (`ColorBgSurface`) with crisp border (`ColorBorderSubtle`).
 - **Children:**
-  - `ResetBtn`: Left-aligned (`anchoredPosition: (16, 0)`), size `130 × 52 px`, background `ColorBgPrimary`, text `"RESET"`. Clears placed models.
-  - `StatusLabel`: Stretched between margins `(160, 0)` to `(-160, 0)`, centered bold 20px guidance text (e.g. *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*).
+  - `ResetBtn`: Left-aligned (`anchoredPosition: (16, 0)`), size `140 × 56 px`, background `ColorBgPrimary`, text `"RESET"` (20 px Bold).
+  - `StatusLabel`: Stretched `(174, 0)` to `(-20, 0)`, 24 px Bold `#1A1A1E` guidance text (e.g. *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*).
 
-#### Unified Bottom Panel (1020 × 360 px)
+#### Unified Bottom Panel (1000 × 316 px)
 - **Object Name:** `UnifiedBottomPanel`
 - **Anchoring:** Bottom-Center (`anchorMin: (0.5, 0.0)`, `anchorMax: (0.5, 0.0)`, `pivot: (0.5, 0.5)`)
-- **Position & Size:** `anchoredPosition: (0, 200)`, `sizeDelta: (1020, 360)`
-- **Background:** `ColorBgSurface` with subtle border.
+- **Position & Size:** `anchoredPosition: (0, 190)`, `sizeDelta: (1000, 316)`
+- **Background:** Elevated translucent surface white (`ColorBgSurface`) with subtle border.
 - **Children:**
   - `HandlePill`: Centered at top `(0, -10)`, size `64 × 6 px`, color `ColorHandle`.
-  - `ControlRow`: Height `78 px`, anchored `Y = -26 px`. Uses `HorizontalLayoutGroup` (spacing `14 px`, padding `16 px` sides):
-    - `RotLBtn`: Size `170 × 72 px`, text `"ROTATE L\n(-15 deg)"`.
-    - `LockBtn`: Size `470 × 72 px`, background `ColorAccentTeal`, text `"LOCK POSITION"`.
-    - `RotRBtn`: Size `170 × 72 px`, text `"ROTATE R\n(+15 deg)"`.
-    - `DelBtn`: Size `84 × 72 px`, background `ColorBgPrimary`, text `"DEL"`.
-  - `CatalogLauncherRow`: Height `224 px`, anchored `Y = 16 px`:
-    - `ActiveItemCard`: Size `320 × 212 px`. Contains subtitle `"CURRENT SELECTION"`, 256×256 thumbnail preview of the active furniture, piece name `"White Sofa"`, and tap-to-open catalog action.
-    - `OpenCatalogBtn`: Size `644 × 212 px`, background `ColorAccentTeal`. Features headline `"FURNITURE CATALOG"`, subtitle `"9 Categories - 75 Curated Pieces"`, and action pill `"EXPLORE ALL FURNITURE ->"`.
+  - `ControlRow`: Height `84 px`, anchored `Y = -22 px`. Uses `HorizontalLayoutGroup` (spacing `14 px`, padding `16 px` sides):
+    - `RotLBtn`: Size `160 × 74 px`, text `"ROTATE L\n-15°"` (18 px Bold).
+    - `LockBtn`: Size `510 × 74 px`, background `ColorAccentTeal` (`#2A9D8F`), text `"LOCK POSITION"` (26 px Bold White).
+    - `RotRBtn`: Size `160 × 74 px`, text `"ROTATE R\n+15°"` (18 px Bold).
+    - `DelBtn`: Size `100 × 74 px`, background `ColorBgPrimary`, text `"DEL"` (20 px Bold Coral Red `#D94740`).
+  - `CatalogLauncherRow`: Height `172 px`, anchored `Y = 16 px`:
+    - `ActiveItemCard`: Size `286 × 156 px`. Tag `"CURRENT PIECE"` (13 px Bold), 88×88 thumbnail preview of the active piece, item name label `"White Sofa"` (20 px Bold). Tapping opens the catalog.
+    - `OpenCatalogBtn`: Size `666 × 156 px`, background `ColorAccentTeal`. Features headline `"FURNITURE CATALOG"` (30 px Bold), subtitle `"9 Categories · 75 Curated Pieces"` (18 px), and white action pill `"EXPLORE ALL FURNITURE →"` (18 px Bold).
 
 ---
 

@@ -39,14 +39,14 @@ public class ARFurnitureAppManager : MonoBehaviour
     public FurnitureItem activeItem;
 
     [Header("Color Palette Tokens")]
-    public static readonly Color ColorBgPrimary = new Color(0.973f, 0.965f, 0.945f, 1f);
-    public static readonly Color ColorBgSurface = new Color(1f, 1f, 1f, 0.98f);
-    public static readonly Color ColorTextPrimary = new Color(0.141f, 0.141f, 0.141f, 1f);
-    public static readonly Color ColorTextSecondary = new Color(0.45f, 0.45f, 0.45f, 1f);
-    public static readonly Color ColorAccentTeal = new Color(0.18f, 0.68f, 0.68f, 1f);
-    public static readonly Color ColorAccentActive = new Color(0.92f, 0.98f, 0.98f, 1f);
-    public static readonly Color BorderSubtle = new Color(0.88f, 0.87f, 0.84f, 1f);
-    public static readonly Color HandleColor = new Color(0.80f, 0.79f, 0.76f, 1f);
+    public static readonly Color ColorBgPrimary = new Color(0.96f, 0.95f, 0.93f, 1f);
+    public static readonly Color ColorBgSurface = new Color(1f, 1f, 1f, 0.96f);
+    public static readonly Color ColorTextPrimary = new Color(0.10f, 0.10f, 0.12f, 1f);
+    public static readonly Color ColorTextSecondary = new Color(0.42f, 0.42f, 0.45f, 1f);
+    public static readonly Color ColorAccentTeal = new Color(0.16f, 0.62f, 0.56f, 1f);
+    public static readonly Color ColorAccentActive = new Color(0.88f, 0.96f, 0.95f, 1f);
+    public static readonly Color BorderSubtle = new Color(0.86f, 0.85f, 0.82f, 1f);
+    public static readonly Color HandleColor = new Color(0.78f, 0.77f, 0.74f, 1f);
 
     [Header("Screens")]
     public GameObject splashPanel;
@@ -124,7 +124,13 @@ public class ARFurnitureAppManager : MonoBehaviour
 
         if (splashPanel != null && splashPanel.activeSelf)
         {
+            if (arOverlayPanel != null) arOverlayPanel.SetActive(false);
             splashCoroutine = StartCoroutine(SplashScreenSequence());
+        }
+        else
+        {
+            if (splashPanel != null) splashPanel.SetActive(false);
+            if (arOverlayPanel != null) arOverlayPanel.SetActive(true);
         }
     }
 
@@ -435,6 +441,7 @@ public class ARFurnitureAppManager : MonoBehaviour
         }
 
         if (splashPanel != null) splashPanel.SetActive(false);
+        if (arOverlayPanel != null) arOverlayPanel.SetActive(true);
     }
 
     private IEnumerator SplashScreenSequence()
