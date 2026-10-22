@@ -1,15 +1,14 @@
 {
   "dependencies": {
     "com.ptc.vuforia.engine": {
-      "version": "11.4.4",
+      "version": "file:com.ptc.vuforia.engine",
       "depth": 0,
-      "source": "registry",
+      "source": "embedded",
       "dependencies": {
         "com.unity.ugui": "1.0.0",
         "com.unity.inputsystem": "1.11.2",
         "com.unity.nuget.newtonsoft-json": "3.2.1"
-      },
-      "url": "https://registry.packages.developer.vuforia.com"
+      }
     },
     "com.unity.collab-proxy": {
       "version": "2.12.4",
