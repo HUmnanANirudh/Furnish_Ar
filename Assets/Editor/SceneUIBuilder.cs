@@ -7,7 +7,6 @@ using UnityEngine.UI;
 using Vuforia;
 using Image = UnityEngine.UI.Image;
 
-[InitializeOnLoad]
 public class SceneUIBuilder
 {
     private static readonly Color ColorBgPrimary = new Color(0.973f, 0.965f, 0.945f, 1f);
@@ -19,29 +18,17 @@ public class SceneUIBuilder
     private static readonly Color ColorBorderSubtle = new Color(0.88f, 0.87f, 0.84f, 1f);
     private static readonly Color ColorHandle = new Color(0.80f, 0.79f, 0.76f, 1f);
 
-    static SceneUIBuilder()
-    {
-        EditorApplication.delayCall += AutoCleanLegacyObjects;
-    }
-
-    private static void AutoCleanLegacyObjects()
-    {
-        GameObject xrOrigin = GameObject.Find("XR Origin");
-        GameObject arSession = GameObject.Find("AR Session");
-        GameObject mainCam = GameObject.Find("Main Camera");
-        if (xrOrigin != null || arSession != null || (mainCam != null && GameObject.Find("ARCamera") == null))
-        {
-            BakeSceneUI();
-        }
-    }
-
     [MenuItem("Furnish AR/Bake UI To Scene")]
     public static void BakeSceneUI()
     {
         EditorPrefs.SetBool("SelectableEditor.ShowNavigation", false);
 
         string scenePath = "Assets/Scenes/SampleScene.unity";
-        Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+        Scene scene = SceneManager.GetActiveScene();
+        if (scene.path != scenePath)
+        {
+            scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+        }
 
         GameObject xrOrigin = GameObject.Find("XR Origin");
         if (xrOrigin != null) Object.DestroyImmediate(xrOrigin);
@@ -51,6 +38,9 @@ public class SceneUIBuilder
 
         GameObject oldMainCam = GameObject.Find("Main Camera");
         if (oldMainCam != null) Object.DestroyImmediate(oldMainCam);
+
+        GameObject oldPlane = GameObject.Find("AR Default Plane");
+        if (oldPlane != null) Object.DestroyImmediate(oldPlane);
 
         GameObject arCamObj = GameObject.Find("ARCamera");
         if (arCamObj == null)
@@ -75,7 +65,6 @@ public class SceneUIBuilder
 
         VuforiaBehaviour vb = arCamObj.GetComponent<VuforiaBehaviour>();
         if (vb == null) vb = arCamObj.AddComponent<VuforiaBehaviour>();
-        vb.SetWorldCenter(WorldCenterMode.DEVICE, null);
 
         GameObject planeFinderObj = GameObject.Find("Plane Finder");
         if (planeFinderObj == null)
