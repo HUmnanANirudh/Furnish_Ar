@@ -149,40 +149,46 @@ public class SceneUIBuilder
         pm.whiteSofaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Assets/Furnitures/White Sofa/White Sofa.prefab");
         pm.brownSofaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Assets/Furnitures/Brown Sofa/Brown Sofa.prefab");
         pm.lightBrownSofaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Assets/Furnitures/Light Brown Sofa/Light Brown Sofa.prefab");
-        pm.currentSelectedPrefab = pm.whiteSofaPrefab;
-
-        GameObject showcaseFurniture = null;
-        if (pm.whiteSofaPrefab != null)
-        {
-            showcaseFurniture = Object.Instantiate(pm.whiteSofaPrefab);
-            showcaseFurniture.name = "InitialShowcaseFurniture";
-            showcaseFurniture.transform.position = new Vector3(0f, 0f, 2.2f);
-            showcaseFurniture.transform.rotation = Quaternion.Euler(0f, 195f, 0f);
-
-            FurnitureLockBadge badge = showcaseFurniture.GetComponent<FurnitureLockBadge>();
-            if (badge == null) badge = showcaseFurniture.AddComponent<FurnitureLockBadge>();
-            badge.Setup(false);
-
-            pm.activeFurnitureInstance = showcaseFurniture;
-        }
+        pm.currentSelectedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Furniture Mega Pack/Prefabs/Sofas/Sofa01.prefab");
+        if (pm.currentSelectedPrefab == null) pm.currentSelectedPrefab = pm.whiteSofaPrefab;
 
         Font appFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (appFont == null) appFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-        Canvas canvas = Object.FindObjectOfType<Canvas>();
+        Canvas[] existingCanvases = Object.FindObjectsOfType<Canvas>();
+        Canvas mainCanvas = null;
+        foreach (Canvas c in existingCanvases)
+        {
+            if (c.transform.parent == null && c.gameObject.name == "Canvas")
+            {
+                if (mainCanvas == null)
+                {
+                    mainCanvas = c;
+                }
+                else
+                {
+                    Object.DestroyImmediate(c.gameObject);
+                }
+            }
+            else
+            {
+                Object.DestroyImmediate(c.gameObject);
+            }
+        }
+
         GameObject canvasObj;
-        if (canvas == null)
+        if (mainCanvas == null)
         {
             canvasObj = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvas = canvasObj.GetComponent<Canvas>();
+            mainCanvas = canvasObj.GetComponent<Canvas>();
         }
         else
         {
-            canvasObj = canvas.gameObject;
+            canvasObj = mainCanvas.gameObject;
         }
 
         canvasObj.layer = 5;
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        mainCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
         CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
         if (scaler == null) scaler = canvasObj.AddComponent<CanvasScaler>();
@@ -1000,6 +1006,26 @@ public class SceneUIBuilder
 
         SetLayerRecursively(canvasObj, 5);
 
+        GameObject existingShowcase = GameObject.Find("InitialShowcaseFurniture");
+        if (existingShowcase != null) Object.DestroyImmediate(existingShowcase);
+
+        GameObject showcasePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Furniture Mega Pack/Prefabs/Sofas/Sofa01.prefab");
+        if (showcasePrefab == null) showcasePrefab = pm.whiteSofaPrefab;
+
+        if (showcasePrefab != null)
+        {
+            GameObject showcaseFurniture = Object.Instantiate(showcasePrefab);
+            showcaseFurniture.name = "InitialShowcaseFurniture";
+            showcaseFurniture.transform.position = new Vector3(0f, 0f, 2.2f);
+            showcaseFurniture.transform.rotation = Quaternion.Euler(0f, 195f, 0f);
+
+            FurnitureLockBadge badge = showcaseFurniture.GetComponent<FurnitureLockBadge>();
+            if (badge == null) badge = showcaseFurniture.AddComponent<FurnitureLockBadge>();
+            badge.Setup(false);
+
+            pm.activeFurnitureInstance = showcaseFurniture;
+        }
+
         EditorUtility.SetDirty(canvasObj);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -1011,14 +1037,14 @@ public class SceneUIBuilder
         List<CategoryDef> list = new List<CategoryDef>();
 
         CategoryDef sofas = new CategoryDef("Sofas", "Sofas");
-        sofas.items.Add(new ItemDef("WhiteSofa", "White Sofa", "Assets/Assets/Furnitures/White Sofa/White Sofa.prefab", "Assets/Resources/Textures/Catalog/Sofas/WhiteSofa.png"));
-        sofas.items.Add(new ItemDef("BrownSofa", "Brown Sofa", "Assets/Assets/Furnitures/Brown Sofa/Brown Sofa.prefab", "Assets/Resources/Textures/Catalog/Sofas/BrownSofa.png"));
-        sofas.items.Add(new ItemDef("LightBrownSofa", "Light Brown Sofa", "Assets/Assets/Furnitures/Light Brown Sofa/Light Brown Sofa.prefab", "Assets/Resources/Textures/Catalog/Sofas/LightBrownSofa.png"));
         for (int i = 1; i <= 8; i++)
         {
             string numStr = i < 10 ? "0" + i : i.ToString();
             sofas.items.Add(new ItemDef("Sofa" + numStr, "Modern Sofa " + numStr, "Assets/Furniture Mega Pack/Prefabs/Sofas/Sofa" + numStr + ".prefab", "Assets/Resources/Textures/Catalog/Sofas/Sofa" + numStr + ".png"));
         }
+        sofas.items.Add(new ItemDef("WhiteSofa", "White Sofa", "Assets/Assets/Furnitures/White Sofa/White Sofa.prefab", "Assets/Resources/Textures/Catalog/Sofas/WhiteSofa.png"));
+        sofas.items.Add(new ItemDef("BrownSofa", "Brown Sofa", "Assets/Assets/Furnitures/Brown Sofa/Brown Sofa.prefab", "Assets/Resources/Textures/Catalog/Sofas/BrownSofa.png"));
+        sofas.items.Add(new ItemDef("LightBrownSofa", "Light Brown Sofa", "Assets/Assets/Furnitures/Light Brown Sofa/Light Brown Sofa.prefab", "Assets/Resources/Textures/Catalog/Sofas/LightBrownSofa.png"));
         list.Add(sofas);
 
         CategoryDef chairs = new CategoryDef("Chairs", "Chairs");

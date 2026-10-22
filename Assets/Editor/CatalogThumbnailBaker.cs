@@ -52,10 +52,7 @@ public class CatalogThumbnailBaker
             string pPath = files[i];
             string baseName = Path.GetFileNameWithoutExtension(pPath);
             string outFile = Path.Combine(outDir, baseName + ".png");
-            if (!File.Exists(outFile))
-            {
-                BakePrefab(pPath, outFile);
-            }
+            BakePrefab(pPath, outFile);
         }
     }
 
@@ -119,6 +116,17 @@ public class CatalogThumbnailBaker
         string dir = Path.GetDirectoryName(outputPath);
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         File.WriteAllBytes(outputPath, pngBytes);
+
+        string metaFile = outputPath + ".meta";
+        if (File.Exists(metaFile))
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(outputPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.SaveAndReimport();
+            }
+        }
 
         RenderTexture.active = null;
         cam.targetTexture = null;

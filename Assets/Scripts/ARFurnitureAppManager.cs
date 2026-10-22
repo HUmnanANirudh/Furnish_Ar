@@ -35,7 +35,7 @@ public class ARFurnitureAppManager : MonoBehaviour
     [Header("Catalog Suite Data")]
     public List<FurnitureCategory> categories = new List<FurnitureCategory>();
     public int selectedCategoryIndex = 0;
-    public string activeItemId = "WhiteSofa";
+    public string activeItemId = "Sofa01";
     public FurnitureItem activeItem;
 
     [Header("Color Palette Tokens")]
@@ -125,11 +125,13 @@ public class ARFurnitureAppManager : MonoBehaviour
         if (splashPanel != null && splashPanel.activeSelf)
         {
             if (arOverlayPanel != null) arOverlayPanel.SetActive(false);
+            if (catalogModalPanel != null) catalogModalPanel.SetActive(false);
             splashCoroutine = StartCoroutine(SplashScreenSequence());
         }
         else
         {
             if (splashPanel != null) splashPanel.SetActive(false);
+            if (catalogModalPanel != null) catalogModalPanel.SetActive(false);
             if (arOverlayPanel != null) arOverlayPanel.SetActive(true);
         }
     }
@@ -452,6 +454,11 @@ public class ARFurnitureAppManager : MonoBehaviour
 
     public void OpenCatalogModal()
     {
+        if (arOverlayPanel != null)
+        {
+            arOverlayPanel.SetActive(false);
+        }
+
         if (catalogModalPanel != null)
         {
             catalogModalPanel.SetActive(true);
@@ -464,6 +471,11 @@ public class ARFurnitureAppManager : MonoBehaviour
         if (catalogModalPanel != null)
         {
             catalogModalPanel.SetActive(false);
+        }
+
+        if (arOverlayPanel != null)
+        {
+            arOverlayPanel.SetActive(true);
         }
     }
 
