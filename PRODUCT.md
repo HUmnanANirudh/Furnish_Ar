@@ -13,14 +13,19 @@ The application features a comprehensive **9-Category Catalog Suite** comprising
 
 ```mermaid
 flowchart TD
-    Start["Launch App / Open SampleScene"] --> PlaneTrack["Vuforia Plane Detection<br>(Device Camera / Editor Fallback)"]
+    Start["Launch App / Open SampleScene"] --> Splash["SplashScreenPanel<br>(Monogram, Highlights & 'START AR EXPERIENCE')"]
+    Splash --> DismissSplash["Automatic 2.4s Timer or Tap 'START AR'"]
+    DismissSplash --> ARView["Full-Screen AR Camera View<br>(AROverlayPanel Active)"]
+    ARView --> ShowcaseInit["InitialShowcaseFurniture Loaded on Floor<br>(Real 3D White Sofa with Lock Badge)"]
+    ARView --> PlaneTrack["Vuforia Ground Plane Tracking<br>(Android Camera Feed / Editor View)"]
     PlaneTrack --> TapPlacement["Tap Floor to Place Selected Piece"]
     TapPlacement --> SpawnObject["Spawn 3D Model & Attach 3D World Lock Badge"]
     SpawnObject --> Interact["On-Screen Manipulation<br>(Rotate -15 deg, Rotate +15 deg, Drag)"]
+    ShowcaseInit --> Interact
     Interact --> LockCheck{"Lock Position Button"}
     LockCheck -- "Lock" --> LockedState["Furniture Anchored & Locked<br>(Badge turns GREEN 'LOCKED')"]
     LockCheck -- "Unlock" --> UnlockedState["Furniture Moveable<br>(Badge turns AMBER 'UNLOCKED')"]
-    Interact --> OpenCatalog["Tap 'BROWSE CATALOG'<br>(Opens 1/3 - 2/3 Drawer)"]
+    Interact --> OpenCatalog["Tap 'FURNITURE CATALOG'<br>(Opens 1/3 - 2/3 Drawer)"]
     OpenCatalog --> SelectCat["Select Category in 1/3 Sidebar<br>(Sofas, Chairs, Beds, Tables, etc.)"]
     SelectCat --> BrowseGrid["Browse 2/3 Grid with 256x256 Thumbnails"]
     BrowseGrid --> SelectPiece["Tap Any Furniture Card"]
@@ -28,56 +33,60 @@ flowchart TD
     HotSwap --> CloseModal["Catalog Closes Automatically<br>(Returns to Full-Screen AR)"]
     Interact --> DelAction["DEL Button<br>(Removes current furniture)"]
     Interact --> ResetAction["RESET Button<br>(Clears all placed models)"]
-    Interact --> PhotoAction["PHOTO Button<br>(Captures screen snapshot with flash)"]
 ```
 
-### 2.1 Vuforia Augmented Reality Tracking
+### 2.1 Vuforia Augmented Reality Tracking & Camera Pipeline
 - **AR Engine:** PTC Vuforia Engine 11.4.4.
 - **Tracking Mechanism:** `PlaneFinderBehaviour` with `HitTestMode.AUTOMATIC` and device ground plane tracking.
 - **Floor Hit Testing:** `VuforiaBehaviour.Instance.World.HitTest(screenPosition, 1.4f, out HitTestResult hitResult)` calculates the real-world metric surface position and normal.
+- **Android Camera Permissions:**
+  - Configured in [`Assets/Plugins/Android/AndroidManifest.xml`](file:///home/anni/Furnish_Ar/Assets/Plugins/Android/AndroidManifest.xml) with `<uses-permission android:name="android.permission.CAMERA" />` and `<uses-feature android:name="android.hardware.camera" android:required="true" />`.
+  - Explicit runtime authorization requested on start via `UnityEngine.Android.Permission.RequestUserPermission(Permission.Camera)` in [`ARFurnitureAppManager.cs`](file:///home/anni/Furnish_Ar/Assets/Scripts/ARFurnitureAppManager.cs), ensuring zero black-screen issues on Android 14 (API 34).
+- **Natural Standing Perspective:** The `ARCamera` is initialized at standing eye-level `(0, 1.4, -0.5)` with an `18°` downward pitch to ensure raycasts intersect the floor plane reliably.
 - **Zero ARCore / Zero AR Foundation:** ARCore and AR Foundation have been completely removed from packages, scene hierarchy, and build settings in favor of Vuforia's cross-platform engine.
 
-### 2.2 WYSIWYG In-Editor Scene Visibility
-- Unlike standard ARFoundation setups that render a blank gray screen inside the Unity Editor, Furnish AR bakes all UI elements directly into [`Assets/Scenes/SampleScene.unity`](file:///home/anni/Furnish_Ar/Assets/Scenes/SampleScene.unity).
-- Includes an editor-friendly fallback photographic room background ([`Assets/Resources/Textures/Backgrounds/living_room_bg.png`](file:///home/anni/Furnish_Ar/Assets/Resources/Textures/Backgrounds/living_room_bg.png)) allowing immediate visual inspection, testing, and UI tuning in the Editor Scene and Game views without compiling to APK.
+### 2.2 WYSIWYG In-Editor Scene Visibility & 3D Showcase Asset
+- Unlike standard ARFoundation setups that render a blank gray screen inside the Unity Editor, Furnish AR bakes all UI screens and an initial 3D showcase asset directly into [`Assets/Scenes/SampleScene.unity`](file:///home/anni/Furnish_Ar/Assets/Scenes/SampleScene.unity).
+- **Real 3D Showcase Furniture:** A high-detail [`White Sofa.prefab`](file:///home/anni/Furnish_Ar/Assets/Assets/Furnitures/White%20Sofa/White%20Sofa.prefab) is pre-spawned at `(0, 0, 2.2f)` with soft directional lighting (`intensity 1.15`, warm white tint) and the [`FurnitureLockBadge`](file:///home/anni/Furnish_Ar/Assets/Scripts/FurnitureLockBadge.cs) attached.
+- [`furniturePlacementManager.cs`](file:///home/anni/Furnish_Ar/Assets/Scripts/furniturePlacementManager.cs) automatically detects and binds `InitialShowcaseFurniture` upon startup, allowing instant manipulation, rotation, locking, and hot-swapping directly in the Editor Game view without requiring device deployment.
 
-### 2.3 Prominent On-Screen Navigation & Controls
-- **Top Header:**
-  - `RESET`: Clears all active and locked furniture instances.
-  - `StatusLabel`: Real-time contextual guidance (e.g., *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*, *"1 PIECE(S) LOCKED - Tap floor to place another"*).
-  - `PHOTO`: Captures full-resolution screenshot with a camera shutter flash animation.
-- **Unified Bottom Panel:**
-  - **Control Row:**
-    - `ROTATE L (-15 deg)`: Smooth counter-clockwise 15-degree increment rotation.
-    - `LOCK POSITION`: Large, high-visibility turquoise call-to-action that toggles between locking and unlocking the active furniture.
-    - `ROTATE R (+15 deg)`: Smooth clockwise 15-degree increment rotation.
-    - `DEL`: Removes the currently active furniture item or last placed item.
-  - **Catalog Launcher Row:**
-    - `ActiveItemCard` (Left, width 320 px): Displays the thumbnail of the currently selected piece, "CURRENT SELECTION" tag, item name, and "READY TO PLACE" pill. Tapping it opens the catalog.
-    - `OpenCatalogBtn` (Right, width 644 px): Large teal button with bold typography: *"BROWSE CATALOG"*, *"9 Categories - 75 Furniture Pieces"*, and `"[ OPEN 1/3 SIDEBAR & 2/3 GRID -> ]"`. Tapping opens the full catalog modal.
+### 2.3 Distinct Three-Screen Architecture
+The user interface is structured into three clean, dedicated canvas panels:
+
+1. **`SplashScreenPanel`:**
+   - Visual onboarding screen displaying the Furnish AR monogram emblem (`"F"`), headline, subtitle (*"Augmented Reality Interior Design"*), and feature highlight pills (*"True-To-Scale 3D Preview"*, *"Instant Floor Plane Tracking"*, *"75 Curated Designer Pieces"*).
+   - Includes a prominent `"START AR EXPERIENCE ->"` action button for immediate dismissal or auto-fades over 2.4 seconds.
+2. **`AROverlayPanel`:**
+   - The primary transparent HUD layer active during AR tracking.
+   - **Top Header (`TopFloatingHeader`):** Features the `RESET` button on the left to clear placed models and the centered `StatusLabel` delivering real-time contextual guidance (e.g. *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*). The legacy photo snapshot button has been removed for a clean, distraction-free viewfinder.
+   - **Unified Bottom Dock (`UnifiedBottomPanel`):**
+     - **Control Row:** `ROTATE L (-15 deg)`, teal `LOCK POSITION` / `UNLOCK POSITION`, `ROTATE R (+15 deg)`, and `DEL`.
+     - **Catalog Launcher Row:** `ActiveItemCard` (displaying active piece thumbnail and name) and `OpenCatalogBtn` (bold teal button with `"FURNITURE CATALOG"`, `"9 Categories - 75 Curated Pieces"`, and `"EXPLORE ALL FURNITURE ->"`).
+3. **`CatalogModalPanel`:**
+   - Full-screen modal drawer divided into a 1/3 category navigation sidebar and 2/3 scrollable furniture grid.
 
 ### 2.4 1/3 Sidebar and 2/3 Grid Catalog Suite
-- When the user taps `"BROWSE CATALOG"`, a full-height modal drawer opens over a dark translucent backdrop (`rgba(20,20,25,0.72)`).
+- When the user taps `"FURNITURE CATALOG"` or `"EXPLORE ALL FURNITURE ->"`, the modal drawer opens over a dark translucent backdrop (`rgba(20,20,25,0.72)`).
 - **1/3 Category Sidebar (320 px width):**
-  - Features 9 category filter buttons:
-    1. **Sofas** (11 curated pieces: White Sofa, Brown Sofa, Light Brown Sofa, Modern Sofa 01-08)
-    2. **Chairs** (8 curated armchairs: Armchair 01-08)
-    3. **Beds** (8 curated beds: Comfort Bed 01-08)
-    4. **Tables** (8 curated tables: Dining Table 01-08)
-    5. **Closets** (8 curated wardrobes: Wardrobe 01-08)
-    6. **Drawers** (8 curated drawers: Storage Drawer 01-08)
-    7. **Bathroom** (8 curated fixtures: Vanity Unit 01-07, Soaking Tub 01)
-    8. **Kitchen** (8 curated units: Kitchen Cabinet 01-07, Kitchen Sink Unit)
-    9. **Cushions** (8 curated accents: Accent Cushion 01-08)
-  - Selecting any category highlights the button with teal accent (`#2EB0B0`), white text, and right indicator bar, while instantly displaying the matching items in the 2/3 grid.
+   - Features 9 category filter buttons under the header `"CATEGORIES (9)"`:
+     1. **Sofas** (11 curated pieces: White Sofa, Brown Sofa, Light Brown Sofa, Modern Sofa 01-08)
+     2. **Chairs** (8 curated armchairs: Armchair 01-08)
+     3. **Beds** (8 curated beds: Comfort Bed 01-08)
+     4. **Tables** (8 curated tables: Dining Table 01-08)
+     5. **Closets** (8 curated wardrobes: Wardrobe 01-08)
+     6. **Drawers** (8 curated drawers: Storage Drawer 01-08)
+     7. **Bathroom** (8 curated fixtures: Vanity Unit 01-07, Soaking Tub 01)
+     8. **Kitchen** (8 curated units: Kitchen Cabinet 01-07, Kitchen Sink Unit)
+     9. **Cushions** (8 curated accents: Accent Cushion 01-08)
+   - Selecting any category highlights the button with teal accent (`#2EB0B0`), white text, and right indicator bar, while instantly displaying the matching items in the 2/3 grid.
 - **2/3 Furniture Grid (698 px width):**
-  - 2-column scrollable grid of tactile cards (320 × 340 px).
-  - Each card features:
-    - High-resolution 256×256 studio thumbnail with transparent/warm background.
-    - Clean bold item name label (e.g., *"White Sofa"*, *"Armchair 01"*, *"Kitchen Sink Unit"*).
-    - Bold teal `"SELECT & PLACE"` action hint.
-    - `"ACTIVE"` teal badge if this is the currently selected piece.
-  - Tapping any card immediately selects the item, performs an in-place hot swap if an unlocked piece is on the floor, closes the modal, and returns to full AR view with a confirmation toast.
+   - 2-column scrollable grid of tactile cards (320 × 340 px).
+   - Each card features:
+     - High-resolution 256×256 studio thumbnail with transparent/warm background.
+     - Clean bold item name label (e.g., *"White Sofa"*, *"Armchair 01"*, *"Kitchen Sink Unit"*).
+     - Bold teal `"SELECT & PLACE"` action hint.
+     - `"ACTIVE"` teal badge if this is the currently selected piece.
+   - Tapping any card immediately selects the item, performs an in-place hot swap if an unlocked piece is on the floor, closes the modal, and returns to full AR view with a confirmation toast.
 
 ### 2.5 In-Place Hot-Swapping
 - If a furniture model is already placed on the floor (unlocked), selecting a new model from the catalog immediately replaces it at the exact same floor coordinate and rotation angle.
@@ -137,10 +146,11 @@ Furnish_Ar/
 │   │   ├── BuildScript.cs                  # Headless & batchmode Android build automation
 │   │   ├── CatalogThumbnailBaker.cs        # Studio camera thumbnail generation automation
 │   │   └── SceneUIBuilder.cs               # One-click scene UI baker & 1/3-2/3 catalog suite generator
+│   ├── Plugins/
+│   │   └── Android/
+│   │       └── AndroidManifest.xml         # Camera hardware & permission declarations
 │   ├── Resources/
 │   │   └── Textures/
-│   │       ├── Backgrounds/
-│   │       │   └── living_room_bg.png      # Fallback editor living room photographic plane
 │   │       └── Catalog/                    # 75 Baked 256x256 Studio Sprites (692 KB total)
 │   │           ├── Bathroom/               # 8 bathroom fixture sprites
 │   │           ├── Beds/                   # 8 bed sprites
@@ -152,10 +162,10 @@ Furnish_Ar/
 │   │           ├── Sofas/                  # 11 sofa sprites (including originals)
 │   │           └── Tables/                 # 8 table sprites
 │   ├── Scenes/
-│   │   └── SampleScene.unity               # Fully baked AR & 1/3-2/3 catalog scene
+│   │   └── SampleScene.unity               # Fully baked scene with Splash, AR & Catalog screens, and showcase asset
 │   └── Scripts/
-│       ├── ARFurnitureAppManager.cs        # UI controller, 9-category catalog manager, hot-swap & snapshot
-│       ├── furniturePlacementManager.cs    # Vuforia hit-test placement, rotation & lock manager
+│       ├── ARFurnitureAppManager.cs        # UI controller, 3-screen manager, camera permissions & catalog
+│       ├── furniturePlacementManager.cs    # Vuforia hit-test placement, showcase binding, rotation & lock manager
 │       └── FurnitureLockBadge.cs           # 3D world-space floating lock/unlock status badge
 ├── Packages/
 │   ├── manifest.json                       # Vuforia scoped registry & Unity dependencies

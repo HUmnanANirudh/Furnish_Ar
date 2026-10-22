@@ -74,21 +74,38 @@ public class SceneUIBuilder
         GameObject oldPlane = GameObject.Find("AR Default Plane");
         if (oldPlane != null) Object.DestroyImmediate(oldPlane);
 
+        GameObject oldShowcase = GameObject.Find("InitialShowcaseFurniture");
+        if (oldShowcase != null) Object.DestroyImmediate(oldShowcase);
+
+        GameObject dirLightObj = GameObject.Find("Directional Light");
+        if (dirLightObj == null)
+        {
+            dirLightObj = new GameObject("Directional Light");
+        }
+        dirLightObj.transform.position = new Vector3(0f, 3f, 0f);
+        dirLightObj.transform.rotation = Quaternion.Euler(45f, 35f, 0f);
+        Light dirLight = dirLightObj.GetComponent<Light>();
+        if (dirLight == null) dirLight = dirLightObj.AddComponent<Light>();
+        dirLight.type = LightType.Directional;
+        dirLight.color = new Color(1f, 0.98f, 0.94f);
+        dirLight.intensity = 1.15f;
+        dirLight.shadows = LightShadows.Soft;
+
         GameObject arCamObj = GameObject.Find("ARCamera");
         if (arCamObj == null)
         {
             arCamObj = new GameObject("ARCamera");
         }
         arCamObj.tag = "MainCamera";
-        arCamObj.transform.position = Vector3.zero;
-        arCamObj.transform.rotation = Quaternion.identity;
+        arCamObj.transform.position = new Vector3(0f, 1.4f, -0.5f);
+        arCamObj.transform.rotation = Quaternion.Euler(18f, 0f, 0f);
 
         Camera cam = arCamObj.GetComponent<Camera>();
         if (cam == null) cam = arCamObj.AddComponent<Camera>();
         cam.clearFlags = CameraClearFlags.SolidColor;
-        cam.backgroundColor = Color.black;
-        cam.nearClipPlane = 0.1f;
-        cam.farClipPlane = 20f;
+        cam.backgroundColor = new Color(0.12f, 0.12f, 0.14f, 1f);
+        cam.nearClipPlane = 0.05f;
+        cam.farClipPlane = 50f;
         cam.allowMSAA = false;
         cam.allowHDR = false;
 
@@ -132,6 +149,21 @@ public class SceneUIBuilder
         pm.brownSofaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Assets/Furnitures/Brown Sofa/Brown Sofa.prefab");
         pm.lightBrownSofaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Assets/Furnitures/Light Brown Sofa/Light Brown Sofa.prefab");
         pm.currentSelectedPrefab = pm.whiteSofaPrefab;
+
+        GameObject showcaseFurniture = null;
+        if (pm.whiteSofaPrefab != null)
+        {
+            showcaseFurniture = Object.Instantiate(pm.whiteSofaPrefab);
+            showcaseFurniture.name = "InitialShowcaseFurniture";
+            showcaseFurniture.transform.position = new Vector3(0f, 0f, 2.2f);
+            showcaseFurniture.transform.rotation = Quaternion.Euler(0f, 195f, 0f);
+
+            FurnitureLockBadge badge = showcaseFurniture.GetComponent<FurnitureLockBadge>();
+            if (badge == null) badge = showcaseFurniture.AddComponent<FurnitureLockBadge>();
+            badge.Setup(false);
+
+            pm.activeFurnitureInstance = showcaseFurniture;
+        }
 
         Font appFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (appFont == null) appFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
@@ -200,18 +232,113 @@ public class SceneUIBuilder
             appManager.activeItemId = appManager.activeItem.id;
         }
 
-        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Textures/Backgrounds/living_room_bg.png");
+        GameObject splashPanel = CreateUIObject("SplashScreenPanel", canvasObj.transform);
+        SetStretch(splashPanel.GetComponent<RectTransform>());
+        Image splashBg = splashPanel.AddComponent<Image>();
+        splashBg.color = ColorBgPrimary;
+        CanvasGroup splashCg = splashPanel.AddComponent<CanvasGroup>();
+        appManager.splashPanel = splashPanel;
+        appManager.splashCanvasGroup = splashCg;
+
+        GameObject splashCard = CreateUIObject("SplashCard", splashPanel.transform);
+        RectTransform scRect = splashCard.GetComponent<RectTransform>();
+        scRect.anchorMin = new Vector2(0.5f, 0.5f);
+        scRect.anchorMax = new Vector2(0.5f, 0.5f);
+        scRect.pivot = new Vector2(0.5f, 0.5f);
+        scRect.anchoredPosition = new Vector2(0, 40);
+        scRect.sizeDelta = new Vector2(860, 980);
+        Image scBg = splashCard.AddComponent<Image>();
+        scBg.color = ColorBgSurface;
+
+        GameObject scBorder = CreateUIObject("Border", splashCard.transform);
+        SetStretch(scBorder.GetComponent<RectTransform>());
+        Image scbImg = scBorder.AddComponent<Image>();
+        scbImg.color = ColorBorderSubtle;
+        scbImg.raycastTarget = false;
+
+        GameObject logoEmblem = CreateUIObject("LogoEmblem", splashCard.transform);
+        RectTransform leRect = logoEmblem.GetComponent<RectTransform>();
+        leRect.anchorMin = new Vector2(0.5f, 0.78f);
+        leRect.anchorMax = new Vector2(0.5f, 0.78f);
+        leRect.pivot = new Vector2(0.5f, 0.5f);
+        leRect.sizeDelta = new Vector2(110, 110);
+        Image leImg = logoEmblem.AddComponent<Image>();
+        leImg.color = ColorAccentTeal;
+
+        GameObject logoIconText = CreateUIObject("Label", logoEmblem.transform);
+        SetStretch(logoIconText.GetComponent<RectTransform>());
+        Text lit = logoIconText.AddComponent<Text>();
+        lit.font = appFont;
+        lit.fontSize = 44;
+        lit.fontStyle = FontStyle.Bold;
+        lit.color = Color.white;
+        lit.alignment = TextAnchor.MiddleCenter;
+        lit.text = "AR";
+
+        GameObject titleObj = CreateUIObject("AppTitle", splashCard.transform);
+        RectTransform titRect = titleObj.GetComponent<RectTransform>();
+        titRect.anchorMin = new Vector2(0.05f, 0.56f);
+        titRect.anchorMax = new Vector2(0.95f, 0.68f);
+        titRect.offsetMin = Vector2.zero;
+        titRect.offsetMax = Vector2.zero;
+        Text titText = titleObj.AddComponent<Text>();
+        titText.font = appFont;
+        titText.fontSize = 42;
+        titText.fontStyle = FontStyle.Bold;
+        titText.color = ColorTextPrimary;
+        titText.alignment = TextAnchor.MiddleCenter;
+        titText.text = "Furnish AR";
+
+        GameObject subObj = CreateUIObject("AppSubtitle", splashCard.transform);
+        RectTransform subRect = subObj.GetComponent<RectTransform>();
+        subRect.anchorMin = new Vector2(0.05f, 0.48f);
+        subRect.anchorMax = new Vector2(0.95f, 0.56f);
+        subRect.offsetMin = Vector2.zero;
+        subRect.offsetMax = Vector2.zero;
+        Text subText = subObj.AddComponent<Text>();
+        subText.font = appFont;
+        subText.fontSize = 18;
+        subText.color = ColorTextSecondary;
+        subText.alignment = TextAnchor.MiddleCenter;
+        subText.text = "Augmented Reality Interior Design";
+
+        GameObject featuresObj = CreateUIObject("FeaturesTag", splashCard.transform);
+        RectTransform featRect = featuresObj.GetComponent<RectTransform>();
+        featRect.anchorMin = new Vector2(0.08f, 0.28f);
+        featRect.anchorMax = new Vector2(0.92f, 0.44f);
+        featRect.offsetMin = Vector2.zero;
+        featRect.offsetMax = Vector2.zero;
+        Text featText = featuresObj.AddComponent<Text>();
+        featText.font = appFont;
+        featText.fontSize = 16;
+        featText.fontStyle = FontStyle.Bold;
+        featText.color = ColorAccentTeal;
+        featText.alignment = TextAnchor.MiddleCenter;
+        featText.text = "[ 9 CATEGORIES - 75 FURNITURE PIECES ]\n[ INSTANT FLOOR DETECTION ]\n[ TRUE-TO-SCALE 3D PREVIEW ]";
+
+        GameObject startBtn = CreateUIObject("StartBtn", splashCard.transform);
+        RectTransform sbtnRect = startBtn.GetComponent<RectTransform>();
+        sbtnRect.anchorMin = new Vector2(0.5f, 0.12f);
+        sbtnRect.anchorMax = new Vector2(0.5f, 0.12f);
+        sbtnRect.pivot = new Vector2(0.5f, 0.5f);
+        sbtnRect.sizeDelta = new Vector2(520, 76);
+        Image sbtnBg = startBtn.AddComponent<Image>();
+        sbtnBg.color = ColorAccentTeal;
+        AddButton(startBtn);
+
+        GameObject sbtnLabel = CreateUIObject("Label", startBtn.transform);
+        SetStretch(sbtnLabel.GetComponent<RectTransform>());
+        Text sbtnText = sbtnLabel.AddComponent<Text>();
+        sbtnText.font = appFont;
+        sbtnText.fontSize = 22;
+        sbtnText.fontStyle = FontStyle.Bold;
+        sbtnText.color = Color.white;
+        sbtnText.alignment = TextAnchor.MiddleCenter;
+        sbtnText.text = "START AR EXPERIENCE ->";
 
         GameObject overlay = CreateUIObject("AROverlayPanel", canvasObj.transform);
         SetStretch(overlay.GetComponent<RectTransform>());
         appManager.arOverlayPanel = overlay;
-
-        GameObject bgObj = CreateUIObject("FallbackRoomBackground", overlay.transform);
-        SetStretch(bgObj.GetComponent<RectTransform>());
-        Image bgImg = bgObj.AddComponent<Image>();
-        bgImg.sprite = bgSprite;
-        bgImg.preserveAspect = false;
-        bgImg.raycastTarget = false;
 
         GameObject topBar = CreateUIObject("TopFloatingHeader", overlay.transform);
         RectTransform tbRect = topBar.GetComponent<RectTransform>();
@@ -229,7 +356,7 @@ public class SceneUIBuilder
         rbRect.anchorMax = new Vector2(0f, 0.5f);
         rbRect.pivot = new Vector2(0f, 0.5f);
         rbRect.anchoredPosition = new Vector2(16, 0);
-        rbRect.sizeDelta = new Vector2(130, 52);
+        rbRect.sizeDelta = new Vector2(140, 52);
         Image rbBg = resetBtn.AddComponent<Image>();
         rbBg.color = ColorBgPrimary;
         AddButton(resetBtn);
@@ -239,37 +366,25 @@ public class SceneUIBuilder
         RectTransform stRect = statusObj.GetComponent<RectTransform>();
         stRect.anchorMin = new Vector2(0f, 0f);
         stRect.anchorMax = new Vector2(1f, 1f);
-        stRect.offsetMin = new Vector2(160, 0);
-        stRect.offsetMax = new Vector2(-160, 0);
+        stRect.offsetMin = new Vector2(170, 0);
+        stRect.offsetMax = new Vector2(-20, 0);
         Text stText = statusObj.AddComponent<Text>();
         stText.font = appFont;
         stText.fontSize = 20;
         stText.fontStyle = FontStyle.Bold;
         stText.color = ColorTextPrimary;
-        stText.alignment = TextAnchor.MiddleCenter;
+        stText.alignment = TextAnchor.MiddleLeft;
         stText.horizontalOverflow = HorizontalWrapMode.Overflow;
         stText.verticalOverflow = VerticalWrapMode.Overflow;
         stText.text = "Tap floor to place White Sofa";
         appManager.mainStatusText = stText;
 
-        GameObject photoBtn = CreateUIObject("PhotoBtn", topBar.transform);
-        RectTransform pbRect = photoBtn.GetComponent<RectTransform>();
-        pbRect.anchorMin = new Vector2(1f, 0.5f);
-        pbRect.anchorMax = new Vector2(1f, 0.5f);
-        pbRect.pivot = new Vector2(1f, 0.5f);
-        pbRect.anchoredPosition = new Vector2(-16, 0);
-        pbRect.sizeDelta = new Vector2(130, 52);
-        Image pbBg = photoBtn.AddComponent<Image>();
-        pbBg.color = ColorBgPrimary;
-        AddButton(photoBtn);
-        AddText(photoBtn, "PHOTO", 17, FontStyle.Bold, ColorTextPrimary, appFont);
-
         GameObject bottomPanel = CreateUIObject("UnifiedBottomPanel", overlay.transform);
         RectTransform bpRect = bottomPanel.GetComponent<RectTransform>();
         bpRect.anchorMin = new Vector2(0.5f, 0f);
         bpRect.anchorMax = new Vector2(0.5f, 0f);
-        bpRect.pivot = new Vector2(0.5f, 0f);
-        bpRect.anchoredPosition = new Vector2(0, 40);
+        bpRect.pivot = new Vector2(0.5f, 0.5f);
+        bpRect.anchoredPosition = new Vector2(0, 200);
         bpRect.sizeDelta = new Vector2(1020, 360);
         Image bpBg = bottomPanel.AddComponent<Image>();
         bpBg.color = ColorBgSurface;
@@ -433,7 +548,7 @@ public class SceneUIBuilder
         octText.fontStyle = FontStyle.Bold;
         octText.color = Color.white;
         octText.alignment = TextAnchor.MiddleCenter;
-        octText.text = "BROWSE CATALOG";
+        octText.text = "FURNITURE CATALOG";
 
         GameObject ocSub = CreateUIObject("BtnSubtitle", openCatalogBtn.transform);
         RectTransform ocsRect = ocSub.GetComponent<RectTransform>();
@@ -446,7 +561,7 @@ public class SceneUIBuilder
         ocsText.fontSize = 17;
         ocsText.color = new Color(1f, 1f, 1f, 0.92f);
         ocsText.alignment = TextAnchor.MiddleCenter;
-        ocsText.text = "9 Categories - 75 Furniture Pieces";
+        ocsText.text = "9 Categories - 75 Curated Pieces";
 
         GameObject ocPill = CreateUIObject("BtnPill", openCatalogBtn.transform);
         RectTransform ocpRect = ocPill.GetComponent<RectTransform>();
@@ -464,9 +579,9 @@ public class SceneUIBuilder
         ocpText.fontStyle = FontStyle.Bold;
         ocpText.color = ColorTextPrimary;
         ocpText.alignment = TextAnchor.MiddleCenter;
-        ocpText.text = "[ OPEN 1/3 SIDEBAR & 2/3 GRID -> ]";
+        ocpText.text = "EXPLORE ALL FURNITURE ->";
 
-        GameObject modalPanel = CreateUIObject("CatalogModalPanel", overlay.transform);
+        GameObject modalPanel = CreateUIObject("CatalogModalPanel", canvasObj.transform);
         SetStretch(modalPanel.GetComponent<RectTransform>());
         appManager.catalogModalPanel = modalPanel;
 
@@ -588,12 +703,12 @@ public class SceneUIBuilder
         sideViewport.AddComponent<RectMask2D>();
 
         GameObject sideContent = CreateUIObject("Content", sideViewport.transform);
-        RectTransform scRect = sideContent.GetComponent<RectTransform>();
-        scRect.anchorMin = new Vector2(0f, 1f);
-        scRect.anchorMax = new Vector2(1f, 1f);
-        scRect.pivot = new Vector2(0.5f, 1f);
-        scRect.anchoredPosition = Vector2.zero;
-        scRect.sizeDelta = new Vector2(0, 0);
+        RectTransform sideContentRect = sideContent.GetComponent<RectTransform>();
+        sideContentRect.anchorMin = new Vector2(0f, 1f);
+        sideContentRect.anchorMax = new Vector2(1f, 1f);
+        sideContentRect.pivot = new Vector2(0.5f, 1f);
+        sideContentRect.anchoredPosition = Vector2.zero;
+        sideContentRect.sizeDelta = new Vector2(0, 0);
 
         VerticalLayoutGroup svlg = sideContent.AddComponent<VerticalLayoutGroup>();
         svlg.padding = new RectOffset(10, 10, 10, 20);
@@ -607,7 +722,7 @@ public class SceneUIBuilder
         scsf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         ScrollRect sideSr = sideScroll.AddComponent<ScrollRect>();
-        sideSr.content = scRect;
+        sideSr.content = sideContentRect;
         sideSr.viewport = sideViewport.GetComponent<RectTransform>();
         sideSr.horizontal = false;
         sideSr.vertical = true;
@@ -863,22 +978,14 @@ public class SceneUIBuilder
         appManager.toastObj = toastObj;
         appManager.toastText = tt;
 
-        GameObject flashObj = CreateUIObject("SnapshotFlashOverlay", overlay.transform);
-        SetStretch(flashObj.GetComponent<RectTransform>());
-        Image flashImg = flashObj.AddComponent<Image>();
-        flashImg.color = Color.white;
-        CanvasGroup flashCg = flashObj.AddComponent<CanvasGroup>();
-        flashCg.alpha = 0f;
-        flashObj.SetActive(false);
-        appManager.snapshotFlash = flashObj;
-        appManager.snapshotCanvasGroup = flashCg;
+        modalPanel.SetActive(false);
 
         SetLayerRecursively(canvasObj, 5);
 
         EditorUtility.SetDirty(canvasObj);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-        Debug.Log("Scene UI successfully baked into Assets/Scenes/SampleScene.unity with Vuforia and 9-category catalog suite");
+        Debug.Log("Scene UI successfully baked with Splash, AR, and Catalog screens, and initial 3D showcase furniture");
     }
 
     private static List<CategoryDef> BuildCatalogDefinitions()

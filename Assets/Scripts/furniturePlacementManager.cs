@@ -45,6 +45,21 @@ public class furniturePlacementManager : MonoBehaviour
         {
             currentSelectedPrefab = whiteSofaPrefab;
         }
+
+        if (activeFurnitureInstance == null)
+        {
+            GameObject showcase = GameObject.Find("InitialShowcaseFurniture");
+            if (showcase != null)
+            {
+                activeFurnitureInstance = showcase;
+                FurnitureLockBadge badge = activeFurnitureInstance.GetComponent<FurnitureLockBadge>();
+                if (badge == null)
+                {
+                    badge = activeFurnitureInstance.AddComponent<FurnitureLockBadge>();
+                    badge.Setup(false);
+                }
+            }
+        }
     }
 
     private void Update()

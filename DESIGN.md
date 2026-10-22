@@ -5,11 +5,13 @@
 Furnish AR utilizes a warm, minimalist **Japandi & Scandinavian-inspired** aesthetic merged with functional, high-contrast mobile ergonomic controls. 
 
 Key principles governing the interface:
-1. **Ergonomic Spatial Controls:** Primary floor manipulation controls are located in the lower thumb-zone of modern tall mobile screens (20:9 aspect ratio) to allow easy one-handed operation while holding a phone in AR.
-2. **Immediate State Clarity:** The user is always aware whether an object is editable or locked. Status is reinforced both on the 2D primary HUD button (`LOCK POSITION`) and in 3D space above the furniture with a floating billboard badge.
-3. **1/3 - 2/3 Modal Catalog Hierarchy:** To accommodate 75 furniture pieces across 9 categories without cluttering the AR viewfinder, a modal drawer divides into a 1/3 category navigation sidebar and a 2/3 scrollable 2-column card grid.
-4. **Seamless In-Place Hot-Swapping:** Selecting any piece from the catalog replaces an existing unlocked model on the floor at the exact world coordinates and orientation, immediately adjusting the 3D lock badge.
-5. **In-Editor WYSIWYG Transparency:** All UI components exist as real baked uGUI hierarchies in the scene canvas, styled with clean flat cards, subtle borders, and clear typographic hierarchy that render accurately in both Editor and Device viewports.
+1. **Three-Screen Architecture:** The UI is cleanly structured into three distinct top-level panels: `SplashScreenPanel` (visual brand entrance & feature highlights), `AROverlayPanel` (minimalist, distraction-free AR manipulation HUD), and `CatalogModalPanel` (1/3 sidebar and 2/3 grid furniture explorer).
+2. **Immediate In-Editor WYSIWYG & Showcase Furniture:** A pre-instantiated high-detail 3D model ([`White Sofa.prefab`](file:///home/anni/Furnish_Ar/Assets/Assets/Furnitures/White%20Sofa/White%20Sofa.prefab)) sits on the ground floor at `(0, 0, 2.2f)` with dedicated directional lighting and a floating `FurnitureLockBadge`. Developers and designers can immediately test interactions, camera angles, and UI layouts directly in the Unity Editor Game and Scene views without compiling to APK.
+3. **Ergonomic Spatial Controls:** Primary floor manipulation controls are located in the lower thumb-zone of modern tall mobile screens (20:9 aspect ratio) to allow easy one-handed operation while holding a phone in AR.
+4. **Immediate State Clarity:** The user is always aware whether an object is editable or locked. Status is reinforced both on the 2D primary HUD button (`LOCK POSITION` / `UNLOCK POSITION`) and in 3D space above the furniture with a floating billboard badge.
+5. **1/3 - 2/3 Modal Catalog Hierarchy:** To accommodate 75 furniture pieces across 9 categories without cluttering the AR viewfinder, a modal drawer divides into a 1/3 category navigation sidebar and a 2/3 scrollable 2-column card grid.
+6. **Seamless In-Place Hot-Swapping:** Selecting any piece from the catalog replaces an existing unlocked model on the floor at the exact world coordinates and orientation, immediately adjusting the 3D lock badge.
+7. **Clean Production UX (Zero Developer Jargon):** All interface labels, prompts, and actions are framed from the perspective of an interior designer or shopper, eliminating developer terms like `[ OPEN 1/3 SIDEBAR & 2/3 GRID -> ]` in favor of polished actions such as `EXPLORE ALL FURNITURE ->`.
 
 ---
 
@@ -39,6 +41,11 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
 
 | Element | Size | Weight / Style | Color | Alignment |
 | :--- | :--- | :--- | :--- | :--- |
+| **Splash Monogram Emblem** | 64 px | Bold | `#FFFFFF` | Center |
+| **Splash Screen Title** | 36 px | Bold | `#242424` | Center |
+| **Splash Screen Subtitle** | 18 px | Normal | `#737373` | Center |
+| **Splash Feature Text** | 16 px | Bold | `#242424` | Center |
+| **Splash Start Button CTA** | 20 px | Bold | `#FFFFFF` | Center |
 | **Modal Header Title** | 28 px | Bold | `#242424` | Left |
 | **Catalog Launcher Title** | 28 px | Bold | `#FFFFFF` | Center |
 | **Top Status Header** | 20 px | Bold | `#242424` | Center |
@@ -48,7 +55,7 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
 | **Category Button Label** | 19 px | Bold (Active) / Normal | `#FFFFFF` / `#242424` | Center |
 | **Active Item Card Name** | 18 px | Bold | `#242424` | Center |
 | **Secondary Controls** (`ROTATE`, `DEL`) | 16-18 px | Bold | `#242424` | Center |
-| **Top Header Actions** (`RESET`, `PHOTO`) | 17 px | Bold | `#242424` / `#737373` | Center |
+| **Top Header Action** (`RESET`) | 17 px | Bold | `#242424` | Center |
 | **Launcher Subtitle** | 17 px | Normal | `#FFFFFF` (92% alpha) | Center |
 | **Modal Header Subtitle** | 16 px | Normal | `#737373` | Left |
 | **Category Sidebar Header** | 16 px | Bold | `#737373` | Center |
@@ -72,14 +79,42 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
 
 ---
 
-### 4.2 Primary AR HUD View
+### 4.2 Splash Screen Panel (`SplashScreenPanel`)
+
+The splash screen acts as an elegant welcome card overlay that greets the user on launch:
+```
++-------------------------------------------------------------+
+|                                                             |
+|          +---------------------------------------+          |
+|          |                 ( F )                 |          | <- LogoEmblem (110 x 110, Teal Circle)
+|          |               Furnish AR              |          | <- AppTitle (36 px Bold)
+|          |    Augmented Reality Interior Design  |          | <- AppSubtitle (18 px)
+|          | ------------------------------------- |          | <- Divider (740 x 2)
+|          | [ True-To-Scale 3D Preview          ] |          | <- FeaturePill 1 (740 x 64)
+|          | [ Instant Floor Plane Tracking      ] |          | <- FeaturePill 2 (740 x 64)
+|          | [ 75 Curated Designer Pieces        ] |          | <- FeaturePill 3 (740 x 64)
+|          |                                       |          |
+|          |     [ START AR EXPERIENCE -> ]        |          | <- StartBtn (740 x 84, Teal)
+|          +---------------------------------------+          | <- SplashCard (860 x 980)
+|                                                             |
++-------------------------------------------------------------+
+```
+- **Panel Transform:** Stretches across full canvas (`1080 × 2400 px`).
+- **SplashCard:** Size `860 × 980 px`, centered at `(0, 40)`, surface white background (`ColorBgSurface`) with subtle border.
+- **LogoEmblem:** `110 × 110 px` teal circular emblem with white monogram letter `"F"`.
+- **Feature Pills:** 3 rounded rows (`740 × 64 px`, `ColorBgPrimary`) highlighting key value props.
+- **StartBtn:** High-contrast `740 × 84 px` teal action button with `"START AR EXPERIENCE ->"`. Tapping immediately triggers a smooth 0.4s fade-out, or auto-dismisses after 2.4 seconds.
+
+---
+
+### 4.3 Primary AR HUD View (`AROverlayPanel`)
 
 ```
 +-------------------------------------------------------------+
 |                      [AR Camera View]                       |
 |                                                             |
 |  +-------------------------------------------------------+  |
-|  | [RESET]      Tap floor to place White Sofa     [PHOTO]|  | <- TopFloatingHeader (980 x 76)
+|  | [RESET]      Tap floor to place White Sofa            |  | <- TopFloatingHeader (980 x 76)
 |  +-------------------------------------------------------+  |
 |                                                             |
 |                      [ 3D FURNITURE ]                       |
@@ -93,9 +128,9 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
 |  | +----------+ +-----------------------+ +----------+-+ |  |
 |  |                                                       |  |
 |  | +-----------------+   +-----------------------------+ |  |
-|  | | CURRENT PIECE   |   |       BROWSE CATALOG        | |  |
+|  | | CURRENT PIECE   |   |      FURNITURE CATALOG      | |  |
 |  | | [Thumb]         |   | 9 Categories - 75 Pieces    | |  | <- CatalogLauncherRow (Height 224)
-|  | | White Sofa      |   | [ 1/3 SIDEBAR & 2/3 GRID ]  | |  |
+|  | | White Sofa      |   | [ EXPLORE ALL FURNITURE -> ]| |  |
 |  | +-----------------+   +-----------------------------+ |  |
 |  +-------------------------------------------------------+  | <- UnifiedBottomPanel (1020 x 360)
 +-------------------------------------------------------------+
@@ -107,14 +142,13 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
 - **Position & Size:** `anchoredPosition: (0, -130)`, `sizeDelta: (980, 76)`
 - **Background:** `ColorBgSurface` with rounded card styling.
 - **Children:**
-  - `ResetBtn`: Left-aligned (`anchoredPosition: (16, 0)`), size `130 × 52 px`, background `ColorBgPrimary`, text `"RESET"`.
-  - `StatusLabel`: Stretched between margins `(160, 0)` to `(-160, 0)`, centered bold 20px guidance text.
-  - `PhotoBtn`: Right-aligned (`anchoredPosition: (-16, 0)`), size `130 × 52 px`, background `ColorBgPrimary`, text `"PHOTO"`.
+  - `ResetBtn`: Left-aligned (`anchoredPosition: (16, 0)`), size `130 × 52 px`, background `ColorBgPrimary`, text `"RESET"`. Clears placed models.
+  - `StatusLabel`: Stretched between margins `(160, 0)` to `(-160, 0)`, centered bold 20px guidance text (e.g. *"Tap floor to place White Sofa"*, *"POSITIONING WHITE SOFA - Tap LOCK to fix"*).
 
 #### Unified Bottom Panel (1020 × 360 px)
 - **Object Name:** `UnifiedBottomPanel`
-- **Anchoring:** Bottom-Center (`anchorMin: (0.5, 0.0)`, `anchorMax: (0.5, 0.0)`, `pivot: (0.5, 0.0)`)
-- **Position & Size:** `anchoredPosition: (0, 40)`, `sizeDelta: (1020, 360)`
+- **Anchoring:** Bottom-Center (`anchorMin: (0.5, 0.0)`, `anchorMax: (0.5, 0.0)`, `pivot: (0.5, 0.5)`)
+- **Position & Size:** `anchoredPosition: (0, 200)`, `sizeDelta: (1020, 360)`
 - **Background:** `ColorBgSurface` with subtle border.
 - **Children:**
   - `HandlePill`: Centered at top `(0, -10)`, size `64 × 6 px`, color `ColorHandle`.
@@ -125,11 +159,11 @@ The UI uses native sans-serif system fonts (`LegacyRuntime.ttf` / `Arial.ttf` / 
     - `DelBtn`: Size `84 × 72 px`, background `ColorBgPrimary`, text `"DEL"`.
   - `CatalogLauncherRow`: Height `224 px`, anchored `Y = 16 px`:
     - `ActiveItemCard`: Size `320 × 212 px`. Contains subtitle `"CURRENT SELECTION"`, 256×256 thumbnail preview of the active furniture, piece name `"White Sofa"`, and tap-to-open catalog action.
-    - `OpenCatalogBtn`: Size `644 × 212 px`, background `ColorAccentTeal`. Features headline `"BROWSE CATALOG"`, subtitle `"9 Categories - 75 Furniture Pieces"`, and action pill `"[ OPEN 1/3 SIDEBAR & 2/3 GRID -> ]"`.
+    - `OpenCatalogBtn`: Size `644 × 212 px`, background `ColorAccentTeal`. Features headline `"FURNITURE CATALOG"`, subtitle `"9 Categories - 75 Curated Pieces"`, and action pill `"EXPLORE ALL FURNITURE ->"`.
 
 ---
 
-### 4.3 1/3 Sidebar & 2/3 Grid Catalog Modal Drawer
+### 4.4 1/3 Sidebar & 2/3 Grid Catalog Modal Drawer (`CatalogModalPanel`)
 
 ```
 +-------------------------------------------------------------+
@@ -229,7 +263,7 @@ Each card in the 2/3 grid is a composite component designed for immediate clarit
 ## 7. Interaction States & Flows
 
 ### 7.1 Category Selection & Filtering Flow
-1. User taps `"BROWSE CATALOG"` in the bottom dock.
+1. User taps `"FURNITURE CATALOG"` or `"EXPLORE ALL FURNITURE ->"` in the bottom dock.
 2. `CatalogModalPanel` activates instantly.
 3. User taps any of the 9 categories on the 1/3 sidebar (e.g. `Chairs`).
 4. The sidebar button highlights with teal background and white text.
@@ -248,13 +282,6 @@ Each card in the 2/3 grid is a composite component designed for immediate clarit
 4. The modal drawer dismisses smoothly, returning to full-screen AR.
 5. A confirmation toast displays: `"Selected Armchair 03 - Tap floor to place"`.
 
-### 7.3 Snapshot Capture & Flash Effect
-1. User taps the `"PHOTO"` button in the top header.
-2. The UI momentarily hides controls or activates `SnapshotFlashOverlay`.
-3. `SnapshotFlashOverlay` rapidly ramps `CanvasGroup.alpha` to `1.0` (white flash) and smoothly fades to `0.0` over 350ms.
-4. A full-resolution screenshot is written to device storage with timestamp.
-5. A dark floating `ToastNotification` (`"Photo saved to gallery!"`) appears at `Y = 44%` and auto-dismisses after 2.2 seconds.
-
 ---
 
 ## 8. Accessibility & Touch Target Standards
@@ -262,13 +289,14 @@ Each card in the 2/3 grid is a composite component designed for immediate clarit
 1. **Strict Touch Target Dimensions:** Every interactive touch target exceeds the 48×48 dp standard:
    - Category Sidebar Buttons: `300 × 92 px`
    - Furniture Grid Cards: `320 × 340 px`
+   - Start AR Experience Button: `740 × 84 px`
    - Lock Position Button: `470 × 72 px`
    - Rotation Buttons: `170 × 72 px`
    - Close Button: `130 × 60 px`
-   - Header Action Buttons (`RESET`, `PHOTO`): `130 × 52 px`
+   - Header Action Button (`RESET`): `130 × 52 px`
 2. **Text Contrast Compliance:**
    - Dark ink (`#242424`) on light surface (`#FFFFFF`): Contrast ratio **14.2:1** (exceeds WCAG AAA).
    - White text on primary teal (`#2EB0B0`): Contrast ratio **4.6:1** (exceeds WCAG AA).
    - Secondary gray text (`#737373`) on ivory (`#F8F6F1`): Contrast ratio **5.6:1** (exceeds WCAG AA).
-3. **Typographic Standard:** All action buttons use uppercase text (`RESET`, `PHOTO`, `ROTATE L`, `LOCK POSITION`, `DEL`, `X CLOSE`, `SELECT & PLACE`).
+3. **Typographic Standard:** All action buttons use uppercase text (`RESET`, `ROTATE L`, `LOCK POSITION`, `DEL`, `X CLOSE`, `SELECT & PLACE`, `START AR EXPERIENCE ->`).
 4. **Code Quality Standard:** Zero comments (`//`, `/* */`), zero emojis across all C# scripts (`/ponytail`). All design decisions and architecture specifications are maintained in this document and [`PRODUCT.md`](file:///home/anni/Furnish_Ar/PRODUCT.md).

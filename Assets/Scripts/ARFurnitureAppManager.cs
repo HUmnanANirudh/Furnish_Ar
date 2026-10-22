@@ -48,27 +48,28 @@ public class ARFurnitureAppManager : MonoBehaviour
     public static readonly Color BorderSubtle = new Color(0.88f, 0.87f, 0.84f, 1f);
     public static readonly Color HandleColor = new Color(0.80f, 0.79f, 0.76f, 1f);
 
-    [Header("AR Overlay References")]
+    [Header("Screens")]
+    public GameObject splashPanel;
+    public CanvasGroup splashCanvasGroup;
     public GameObject arOverlayPanel;
+    public GameObject catalogModalPanel;
+
+    [Header("AR Overlay References")]
     public Text mainStatusText;
     public Image activeItemThumbImg;
     public Text activeItemNameText;
 
     [Header("Catalog Modal References")]
-    public GameObject catalogModalPanel;
     public Text categoryHeaderTitle;
     public Transform categorySidebarContainer;
     public Transform furnitureGridContainer;
 
-    [Header("System Overlays")]
-    public GameObject snapshotFlash;
-    public CanvasGroup snapshotCanvasGroup;
+    [Header("Toast Overlay")]
     public GameObject toastObj;
     public Text toastText;
-    public GameObject splashPanel;
-    public CanvasGroup splashCanvasGroup;
 
     private Coroutine toastCoroutine;
+    private Coroutine splashCoroutine;
     private Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>();
     private Font appFont;
 
@@ -86,10 +87,9 @@ public class ARFurnitureAppManager : MonoBehaviour
 
         InitFont();
 
-        if (catalogModalPanel != null)
-        {
-            catalogModalPanel.SetActive(false);
-        }
+#if UNITY_ANDROID
+        RequestAndroidCameraPermission();
+#endif
     }
 
     private void Start()
@@ -122,10 +122,20 @@ public class ARFurnitureAppManager : MonoBehaviour
         UpdateActiveItemUI();
         UpdateStatusText();
 
-        if (splashPanel != null && splashPanel.activeInHierarchy)
+        if (splashPanel != null && splashPanel.activeSelf)
         {
-            StartCoroutine(SplashScreenSequence());
+            splashCoroutine = StartCoroutine(SplashScreenSequence());
         }
+    }
+
+    private void RequestAndroidCameraPermission()
+    {
+#if UNITY_ANDROID
+        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera))
+        {
+            UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.Camera);
+        }
+#endif
     }
 
     private void InitFont()
@@ -179,129 +189,126 @@ public class ARFurnitureAppManager : MonoBehaviour
             if (c != null) canvasTransform = c.transform;
         }
 
+        Transform splash = canvasTransform.Find("SplashScreenPanel");
+        if (splash != null)
+        {
+            splashPanel = splash.gameObject;
+            splashCanvasGroup = splash.GetComponent<CanvasGroup>();
+
+            Button startBtn = splash.Find("StartBtn")?.GetComponent<Button>();
+            if (startBtn != null)
+            {
+                startBtn.onClick.RemoveAllListeners();
+                startBtn.onClick.AddListener(DismissSplashScreen);
+            }
+        }
+
         Transform overlay = canvasTransform.Find("AROverlayPanel");
-        if (overlay == null)
+        if (overlay != null)
         {
-            return false;
-        }
+            arOverlayPanel = overlay.gameObject;
 
-        arOverlayPanel = overlay.gameObject;
-
-        Button[] allButtons = canvasTransform.GetComponentsInChildren<Button>(true);
-        foreach (Button b in allButtons)
-        {
-            Navigation nav = b.navigation;
-            nav.mode = Navigation.Mode.None;
-            b.navigation = nav;
-        }
-
-        Transform fallbackBg = overlay.Find("FallbackRoomBackground");
-        if (fallbackBg != null)
-        {
-            if (Application.platform == RuntimePlatform.Android)
+            Transform topBar = overlay.Find("TopFloatingHeader");
+            if (topBar != null)
             {
-                fallbackBg.gameObject.SetActive(false);
-            }
-            else
-            {
-                fallbackBg.gameObject.SetActive(true);
-            }
-        }
-
-        Transform topBar = overlay.Find("TopFloatingHeader");
-        if (topBar != null)
-        {
-            Button resetBtn = topBar.Find("ResetBtn")?.GetComponent<Button>();
-            if (resetBtn != null)
-            {
-                resetBtn.onClick.RemoveAllListeners();
-                resetBtn.onClick.AddListener(() => {
-                    if (placementManager != null) placementManager.ClearAllFurniture();
-                });
-            }
-
-            Button photoBtn = topBar.Find("PhotoBtn")?.GetComponent<Button>();
-            if (photoBtn != null)
-            {
-                photoBtn.onClick.RemoveAllListeners();
-                photoBtn.onClick.AddListener(TriggerSnapshot);
-            }
-
-            mainStatusText = topBar.Find("StatusLabel")?.GetComponent<Text>();
-        }
-
-        Transform bottomPanel = overlay.Find("UnifiedBottomPanel");
-        if (bottomPanel != null)
-        {
-            Transform ctrlRow = bottomPanel.Find("ControlRow");
-            if (ctrlRow != null)
-            {
-                Button rotL = ctrlRow.Find("RotLBtn")?.GetComponent<Button>();
-                if (rotL != null)
+                Button resetBtn = topBar.Find("ResetBtn")?.GetComponent<Button>();
+                if (resetBtn != null)
                 {
-                    rotL.onClick.RemoveAllListeners();
-                    rotL.onClick.AddListener(() => {
-                        if (placementManager != null) placementManager.RotateActiveFurniture(-15f);
+                    resetBtn.onClick.RemoveAllListeners();
+                    resetBtn.onClick.AddListener(() => {
+                        if (placementManager != null) placementManager.ClearAllFurniture();
                     });
                 }
 
-                Button lockBtn = ctrlRow.Find("LockBtn")?.GetComponent<Button>();
-                if (lockBtn != null)
-                {
-                    lockBtn.onClick.RemoveAllListeners();
-                    lockBtn.onClick.AddListener(OnLockClicked);
-                }
-
-                Button rotR = ctrlRow.Find("RotRBtn")?.GetComponent<Button>();
-                if (rotR != null)
-                {
-                    rotR.onClick.RemoveAllListeners();
-                    rotR.onClick.AddListener(() => {
-                        if (placementManager != null) placementManager.RotateActiveFurniture(15f);
-                    });
-                }
-
-                Button delBtn = ctrlRow.Find("DelBtn")?.GetComponent<Button>();
-                if (delBtn != null)
-                {
-                    delBtn.onClick.RemoveAllListeners();
-                    delBtn.onClick.AddListener(() => {
-                        if (placementManager != null) placementManager.DeleteCurrentOrLast();
-                    });
-                }
+                mainStatusText = topBar.Find("StatusLabel")?.GetComponent<Text>();
             }
 
-            Transform launcherRow = bottomPanel.Find("CatalogLauncherRow");
-            if (launcherRow != null)
+            Transform bottomPanel = overlay.Find("UnifiedBottomPanel");
+            if (bottomPanel != null)
             {
-                Transform activeCard = launcherRow.Find("ActiveItemCard");
-                if (activeCard != null)
+                Transform ctrlRow = bottomPanel.Find("ControlRow");
+                if (ctrlRow != null)
                 {
-                    activeItemThumbImg = activeCard.Find("Thumbnail")?.GetComponent<Image>();
-                    activeItemNameText = activeCard.Find("ItemName")?.GetComponent<Text>();
-
-                    Button cardBtn = activeCard.GetComponent<Button>();
-                    if (cardBtn != null)
+                    Button rotL = ctrlRow.Find("RotLBtn")?.GetComponent<Button>();
+                    if (rotL != null)
                     {
-                        cardBtn.onClick.RemoveAllListeners();
-                        cardBtn.onClick.AddListener(OpenCatalogModal);
+                        rotL.onClick.RemoveAllListeners();
+                        rotL.onClick.AddListener(() => {
+                            if (placementManager != null) placementManager.RotateActiveFurniture(-15f);
+                        });
+                    }
+
+                    Button lockBtn = ctrlRow.Find("LockBtn")?.GetComponent<Button>();
+                    if (lockBtn != null)
+                    {
+                        lockBtn.onClick.RemoveAllListeners();
+                        lockBtn.onClick.AddListener(OnLockClicked);
+                    }
+
+                    Button rotR = ctrlRow.Find("RotRBtn")?.GetComponent<Button>();
+                    if (rotR != null)
+                    {
+                        rotR.onClick.RemoveAllListeners();
+                        rotR.onClick.AddListener(() => {
+                            if (placementManager != null) placementManager.RotateActiveFurniture(15f);
+                        });
+                    }
+
+                    Button delBtn = ctrlRow.Find("DelBtn")?.GetComponent<Button>();
+                    if (delBtn != null)
+                    {
+                        delBtn.onClick.RemoveAllListeners();
+                        delBtn.onClick.AddListener(() => {
+                            if (placementManager != null) placementManager.DeleteCurrentOrLast();
+                        });
                     }
                 }
 
-                Transform openBtn = launcherRow.Find("OpenCatalogBtn");
-                if (openBtn != null)
+                Transform launcherRow = bottomPanel.Find("CatalogLauncherRow");
+                if (launcherRow != null)
                 {
-                    Button b = openBtn.GetComponent<Button>();
-                    if (b != null)
+                    Transform activeCard = launcherRow.Find("ActiveItemCard");
+                    if (activeCard != null)
                     {
-                        b.onClick.RemoveAllListeners();
-                        b.onClick.AddListener(OpenCatalogModal);
+                        activeItemThumbImg = activeCard.Find("Thumbnail")?.GetComponent<Image>();
+                        activeItemNameText = activeCard.Find("ItemName")?.GetComponent<Text>();
+
+                        Button cardBtn = activeCard.GetComponent<Button>();
+                        if (cardBtn != null)
+                        {
+                            cardBtn.onClick.RemoveAllListeners();
+                            cardBtn.onClick.AddListener(OpenCatalogModal);
+                        }
+                    }
+
+                    Transform openBtn = launcherRow.Find("OpenCatalogBtn");
+                    if (openBtn != null)
+                    {
+                        Button b = openBtn.GetComponent<Button>();
+                        if (b != null)
+                        {
+                            b.onClick.RemoveAllListeners();
+                            b.onClick.AddListener(OpenCatalogModal);
+                        }
                     }
                 }
             }
+
+            Transform toast = overlay.Find("ToastNotification");
+            if (toast != null)
+            {
+                toastObj = toast.gameObject;
+                toastText = toast.Find("Text")?.GetComponent<Text>();
+                toastObj.SetActive(false);
+            }
         }
 
-        Transform modal = overlay.Find("CatalogModalPanel");
+        Transform modal = canvasTransform.Find("CatalogModalPanel");
+        if (modal == null && overlay != null)
+        {
+            modal = overlay.Find("CatalogModalPanel");
+        }
+
         if (modal != null)
         {
             catalogModalPanel = modal.gameObject;
@@ -348,27 +355,12 @@ public class ARFurnitureAppManager : MonoBehaviour
             catalogModalPanel.SetActive(false);
         }
 
-        Transform toast = overlay.Find("ToastNotification");
-        if (toast != null)
+        Button[] allButtons = canvasTransform.GetComponentsInChildren<Button>(true);
+        foreach (Button b in allButtons)
         {
-            toastObj = toast.gameObject;
-            toastText = toast.Find("Text")?.GetComponent<Text>();
-            toastObj.SetActive(false);
-        }
-
-        Transform flash = overlay.Find("SnapshotFlashOverlay");
-        if (flash != null)
-        {
-            snapshotFlash = flash.gameObject;
-            snapshotCanvasGroup = flash.GetComponent<CanvasGroup>();
-            snapshotFlash.SetActive(false);
-        }
-
-        Transform splash = canvasTransform.Find("SplashScreenPanel");
-        if (splash != null)
-        {
-            splashPanel = splash.gameObject;
-            splashCanvasGroup = splash.GetComponent<CanvasGroup>();
+            Navigation nav = b.navigation;
+            nav.mode = Navigation.Mode.None;
+            b.navigation = nav;
         }
 
         return true;
@@ -420,6 +412,35 @@ public class ARFurnitureAppManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void DismissSplashScreen()
+    {
+        if (splashCoroutine != null) StopCoroutine(splashCoroutine);
+        StartCoroutine(FadeOutSplashRoutine());
+    }
+
+    private IEnumerator FadeOutSplashRoutine()
+    {
+        if (splashCanvasGroup != null)
+        {
+            float elapsed = 0f;
+            float duration = 0.4f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                splashCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+                yield return null;
+            }
+        }
+
+        if (splashPanel != null) splashPanel.SetActive(false);
+    }
+
+    private IEnumerator SplashScreenSequence()
+    {
+        yield return new WaitForSeconds(2.4f);
+        yield return FadeOutSplashRoutine();
     }
 
     public void OpenCatalogModal()
@@ -621,45 +642,6 @@ public class ARFurnitureAppManager : MonoBehaviour
         }
     }
 
-    public void TriggerSnapshot()
-    {
-        StartCoroutine(CaptureSnapshotRoutine());
-    }
-
-    private IEnumerator CaptureSnapshotRoutine()
-    {
-        if (arOverlayPanel != null) arOverlayPanel.SetActive(false);
-
-        yield return new WaitForEndOfFrame();
-
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string filename = "FurnishAR_" + timestamp + ".png";
-
-        ScreenCapture.CaptureScreenshot(filename);
-
-        yield return new WaitForSeconds(0.1f);
-
-        if (arOverlayPanel != null) arOverlayPanel.SetActive(true);
-
-        if (snapshotFlash != null && snapshotCanvasGroup != null)
-        {
-            snapshotFlash.SetActive(true);
-            snapshotCanvasGroup.alpha = 1f;
-
-            float elapsed = 0f;
-            float dur = 0.35f;
-            while (elapsed < dur)
-            {
-                elapsed += Time.deltaTime;
-                snapshotCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / dur);
-                yield return null;
-            }
-            snapshotFlash.SetActive(false);
-        }
-
-        ShowToast("Photo saved to gallery!");
-    }
-
     public void ShowToast(string message)
     {
         if (toastObj == null || toastText == null) return;
@@ -736,22 +718,5 @@ public class ARFurnitureAppManager : MonoBehaviour
     {
         UpdateStatusText();
         ShowToast("All furniture cleared. Tap floor to place.");
-    }
-
-    private IEnumerator SplashScreenSequence()
-    {
-        yield return new WaitForSeconds(1.8f);
-
-        float elapsed = 0f;
-        float duration = 0.5f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            if (splashCanvasGroup != null)
-                splashCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
-            yield return null;
-        }
-
-        if (splashPanel != null) splashPanel.SetActive(false);
     }
 }
