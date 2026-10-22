@@ -104,6 +104,7 @@ flowchart TD
 | **Target Architecture**| **ARM64 (64-bit)** |
 | **UI System** | Unity UI (uGUI Canvas) with Scaler set to 1080×2400 |
 | **Catalog Scale** | **9 Categories, 75 Curated 3D Models, 75 Studio Sprites** |
+| **Asset Footprint** | **~390 MB (Pruned 1,273 unused files / 1.39 GB removed)** |
 | **Code Standard** | Zero comments (`//`, `/* */`), zero emojis across all C# scripts |
 
 ---
@@ -114,25 +115,24 @@ flowchart TD
 Furnish_Ar/
 ├── Assets/
 │   ├── Assets/
-│   │   ├── Furnitures/                     # Original 3D Models & Prefabs
-│   │   │   ├── White Sofa/                 # White Sofa prefab, materials, textures, meshes
-│   │   │   ├── Brown Sofa/                 # Brown Sofa prefab, materials, textures, meshes
-│   │   │   └── Light Brown Sofa/           # Light Brown Sofa prefab, materials, textures, meshes
-│   │   └── UI/                             # Original sofa preview textures
-│   ├── Furniture Mega Pack/                # Extensive 3D Furniture Assets Suite
-│   │   ├── Materials/                      # PBR surface materials
-│   │   ├── Meshes/                         # FBX geometry
-│   │   ├── Prefabs/                        # Categorized Prefabs
-│   │   │   ├── Bathroom/                   # Bathroom vanities, tubs, showers
-│   │   │   ├── Beds/                       # Single, double, king beds
-│   │   │   ├── Chairs/                     # Armchairs, office chairs, dining chairs
-│   │   │   ├── Closets/                    # Wardrobes and closets
-│   │   │   ├── Cushioins/                  # Accent cushions
-│   │   │   ├── Drawers/                    # Storage drawers and nightstands
-│   │   │   ├── Kitchen/                    # Kitchen cabinets, countertops, sinks
-│   │   │   ├── Sofas/                      # Sectional, 2-seater, 3-seater sofas
-│   │   │   └── Tables/                     # Dining, coffee, end tables
-│   │   └── Textures/                       # PBR surface maps
+│   │   └── Furnitures/                     # Original 3D Models & Prefabs
+│   │       ├── White Sofa/                 # White Sofa prefab, materials, textures, meshes
+│   │       ├── Brown Sofa/                 # Brown Sofa prefab, materials, textures, meshes
+│   │       └── Light Brown Sofa/           # Light Brown Sofa prefab, materials, textures, meshes
+│   ├── Furniture Mega Pack/                # Curated 3D Furniture Assets Suite (Pruned to Active 72 Models)
+│   │   ├── FBX/                            # Active model geometry
+│   │   ├── Materials/                      # Active PBR surface materials
+│   │   ├── Prefabs/                        # Categorized Prefabs (8 per category)
+│   │   │   ├── Bathroom/                   # Bathroom vanities and tub
+│   │   │   ├── Beds/                       # Beds 01-08
+│   │   │   ├── Chairs/                     # Armchairs 01-08
+│   │   │   ├── Closets/                    # Wardrobes 01-08
+│   │   │   ├── Cushioins/                  # Accent cushions 01-08
+│   │   │   ├── Drawers/                    # Storage drawers 01-08
+│   │   │   ├── Kitchen/                    # Kitchen cabinets and sink
+│   │   │   ├── Sofas/                      # Modern sofas 01-08
+│   │   │   └── Tables/                     # Dining tables 01-08
+│   │   └── Textures/                       # Active PBR surface maps
 │   ├── Editor/
 │   │   ├── BuildScript.cs                  # Headless & batchmode Android build automation
 │   │   ├── CatalogThumbnailBaker.cs        # Studio camera thumbnail generation automation
